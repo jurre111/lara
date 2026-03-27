@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct MobileGestaltEditorView: View {
+struct EditorView: View {
     @ObservedObject private var mgr = laramgr.shared
 
     private let systemMGPath = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"

@@ -32,9 +32,7 @@
 /* Begin PBXFileReference section */
 		8F5C1F9B2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = lara/kexploit/darksword.m; sourceTree = "<group>"; };
 		9F4A1D2E3C4E567890123456 /* lara/lib/libxpf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = lara/lib/libxpf.dylib; sourceTree = "<group>"; };
-		9F4A1D303C4E567890123456 /* lara/xpf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lara/xpf.h; sourceTree = "<group>"; };
 		9F4A1D413C4E567890123456 /* lara/lib/libgrabkernel2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = lara/lib/libgrabkernel2.dylib; sourceTree = "<group>"; };
-		9F4A1D433C4E567890123456 /* lara/libgrabkernel2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lara/libgrabkernel2.h; sourceTree = "<group>"; };
 		CC1C8B392F71DF9C00206982 /* lara.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = lara.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -81,9 +79,7 @@
 			children = (
 				8F5C1F9B2D6A4E9D9F4B1A21 /* lara/kexploit/darksword.m */,
 				9F4A1D2E3C4E567890123456 /* lara/lib/libxpf.dylib */,
-				9F4A1D303C4E567890123456 /* lara/xpf.h */,
 				9F4A1D413C4E567890123456 /* lara/lib/libgrabkernel2.dylib */,
-				9F4A1D433C4E567890123456 /* lara/libgrabkernel2.h */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";

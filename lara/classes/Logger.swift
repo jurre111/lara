@@ -26,7 +26,10 @@ class Logger: ObservableObject {
     private let ignoredLogSubstrings = [
         "Faulty glyph",
         "outline detected - replacing with a space/null glyph",
-        "/System/Library/Fonts/Core/SFUI.ttf"
+        "Gesture: System gesture gate timed out",
+        "tcp_output [",
+        "Error Domain=",
+        "NSError"
     ]
 
     init() {}
@@ -138,6 +141,9 @@ class Logger: ObservableObject {
     }
 
     private func shouldIgnore(_ message: String) -> Bool {
+        if message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return true
+        }
         for fragment in ignoredLogSubstrings {
             if message.contains(fragment) {
                 return true
@@ -153,7 +159,7 @@ struct LogsView: View {
     var body: some View {
         NavigationView {
             List {
-                ForEach(logger.logs, id: \.self) { log in
+                ForEach(Array(logger.logs.enumerated()), id: \.offset) { _, log in
                     Text(log)
                         .font(.system(size: 13, design: .monospaced))
                         .lineSpacing(1)

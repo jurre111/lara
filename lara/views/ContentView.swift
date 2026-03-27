@@ -33,7 +33,6 @@ struct ContentView: View {
                 } else {
                     Section("Kernel Read Write") {
                         Button(mgr.dsrunning ? "Running..." : "Run Exploit") {
-                            init_offsets()
                             mgr.run()
                         }
                         .disabled(mgr.dsrunning)

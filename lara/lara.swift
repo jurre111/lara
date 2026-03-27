@@ -24,6 +24,9 @@ struct lara: App {
                     LogsView(logger: globallogger)
                 }
             }
+            .onAppear {
+                init_offsets()
+            }
         }
     }
 }

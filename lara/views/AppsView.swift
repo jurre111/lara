@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct SideloadedAppsView: View {
+struct AppsView: View {
     @ObservedObject private var mgr = laramgr.shared
     @State private var apps: [SideloadedApp] = []
     @State private var loadError: String?
