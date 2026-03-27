@@ -213,7 +213,7 @@ struct ContentView: View {
                         Spacer()
                     }
                     .onTapGesture {
-                        if let url = URL(string: "https://github.com/khanhduytran0"),
+                        if let url = URL(string: "https://github.com/AppInstalleriOSGH"),
                            UIApplication.shared.canOpenURL(url) {
                             UIApplication.shared.open(url)
                         }
