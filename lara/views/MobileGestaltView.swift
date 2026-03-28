@@ -11,6 +11,7 @@ struct MobileGestaltView: View {
     @State private var showRespringPrompt = false
     @State private var statusMessage: String? = nil
     @State private var showStatusAlert = false
+    @State private var verificationResult: String? = nil
 
     var body: some View {
         VStack {
@@ -116,7 +117,15 @@ struct MobileGestaltView: View {
                 manager.refresh()
                 if ok {
                     statusMessage = "Applied overrides to system cache."
+                    // verify a representative key (Dynamic Island obfuscated key from EditorView)
+                    let dynKey = "YlEtTtHlNesRBMal1CqRaA"
+                    if let verified = manager.verifyKeyInSystemCache(key: dynKey) {
+                        verificationResult = verified ? "Verified: Dynamic Island key present in system cache." : "Verification: key not found in system cache."
+                    } else {
+                        verificationResult = "Verification unavailable (KFS read failed)."
+                    }
                     showRespringPrompt = true
+                    showStatusAlert = true
                 } else {
                     statusMessage = "Failed to apply overrides."
                     showStatusAlert = true
@@ -152,7 +161,12 @@ struct MobileGestaltView: View {
         .alert("Status", isPresented: $showStatusAlert) {
             Button("OK") { showStatusAlert = false }
         } message: {
-            Text(statusMessage ?? "")
+            VStack(alignment: .leading) {
+                Text(statusMessage ?? "")
+                if let v = verificationResult {
+                    Text(v).foregroundColor(.secondary)
+                }
+            }
         }
     }
 }

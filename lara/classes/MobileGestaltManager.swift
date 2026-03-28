@@ -100,6 +100,21 @@ public class MobileGestaltManager: ObservableObject {
         return false
     }
 
+    // Return current in-memory overrides
+    public func getCurrentOverrides() -> [String: String] {
+        return overrides
+    }
+
+    // Verify a key exists in the system MobileGestalt cache stored on disk (via KFS)
+    public func verifyKeyInSystemCache(key: String) -> Bool? {
+        let systemPath = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+        guard laramgr.shared.kfsready else { return nil }
+        guard let data = laramgr.shared.kfsread(path: systemPath) else { return nil }
+        guard let mg = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] else { return nil }
+        let cacheExtra = mg["CacheExtra"] as? [String: Any] ?? [:]
+        return cacheExtra[key] != nil
+    }
+
     // Apply current overrides to MobileGestalt system cache plist via KFS
     public func applyOverridesToSystemCache() -> Bool {
         // system cache path used by EditorView
