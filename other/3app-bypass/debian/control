@@ -1,0 +1,10 @@
+Package: com.lara.threeappbypass
+Name: ThreeAppBypass
+Version: 0.1
+Section: tweaks
+Priority: optional
+Architecture: iphoneos-arm
+Depends: mobilesubstrate, libc, libobjc
+Maintainer: Lara Dev <dev@example.com>
+Description: Prototype tweak to bypass amfid/installd verification with symbol-map support
+ Provides symbol-map based hooking for experimentation.

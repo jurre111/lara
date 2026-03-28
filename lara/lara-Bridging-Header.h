@@ -7,6 +7,8 @@
 #import "darksword.h"
 #import "utils.h"
 #import "kfs.h"
+// MobileGestalt bridge
+#import "MobileGestaltBridge.h"
 
 void test(NSString *path);
 

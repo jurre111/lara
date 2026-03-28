@@ -1,0 +1,11 @@
+{
+  "name": "example-amfid-disable-check",
+  "entries": [
+    {
+      "type": "file_patch",
+      "target": "/usr/libexec/amfid",
+      "offset": "0x0",
+      "data_hex": "0000"
+    }
+  ]
+}

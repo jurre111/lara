@@ -1,0 +1,5 @@
+{
+  "verify_fn": "0x0", // replace 0x0 with the address found for your target build
+  "AMFIPathValidator_validateWithError": "_AMFIPathValidator_validateWithError",
+  "example_symbol_by_name": "_some_symbol_name_in_amfid"
+}
