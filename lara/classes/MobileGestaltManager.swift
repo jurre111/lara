@@ -25,7 +25,6 @@ public class MobileGestaltManager: ObservableObject {
         "CPUArchitecture"
     ]
 
-    public init() {}
     private let overridesKey = "MGOverrides"
     private var overrides: [String: String] = [:]
     private let kfsOverridesPath = "/var/mobile/Library/lara/mobilegestalt_overrides.plist"

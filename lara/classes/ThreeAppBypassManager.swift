@@ -21,7 +21,7 @@ final class ThreeAppBypassManager: ObservableObject {
     }
 
     func loadPatch(from path: String) -> PatchSet? {
-        guard let d = laramgr.shared.kfsread(path) else {
+        guard let d = laramgr.shared.kfsread(path: path) else {
             lastError = "Could not read patch file at \(path)"
             return nil
         }
