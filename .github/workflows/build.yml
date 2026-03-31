@@ -11,9 +11,11 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: checkout 
+      - name: Checkout repository
         uses: actions/checkout@v4
-
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+    
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
 
