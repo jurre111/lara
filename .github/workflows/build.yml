@@ -21,10 +21,10 @@ jobs:
       - name: build
         run: |
           xcodebuild \
-            -project tree/main/lara.xcodeproj \
+            -project /lara.xcodeproj \
             -scheme lara \
             -configuration Debug \
-            -sdk iphonesimulator \
+            -sdk iphoneos \
             -arch arm64 \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
