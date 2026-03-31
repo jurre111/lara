@@ -20,7 +20,7 @@ jobs:
       - name: build
         run: |
           xcodebuild \
-            -project tree/main/lara.xcodeproj \
+            -project lara.xcodeproj \
             -scheme lara \
             -configuration Debug \
             -sdk iphoneos \
