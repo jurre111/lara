@@ -12,9 +12,7 @@ struct AppsView: View {
     @ObservedObject var mgr: laramgr
     @AppStorage("selectedmethod") private var selectedmethod: method = .vfs
     @State private var scannedapps: [scannedapp] = []
-    @State private var allApps: [SBApp] = []
     @State private var iconcache: [String: UIImage] = [:]
-    @State private var isLoadingApps = false
 
     struct scannedapp: Identifiable, Hashable {
         let id: String
@@ -180,24 +178,6 @@ struct AppsView: View {
         scannedapps = results
         iconcache = cache
     }
-    
-    private func loadAllApps() {
-        isLoadingApps = true
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let apps = try ApplicationManager.getApps()
-                DispatchQueue.main.async {
-                    allApps = apps
-                    isLoadingApps = false
-                }
-            } catch {
-                mgr.logmsg("Failed to load apps: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    isLoadingApps = false
-                }
-            }
-        }
-    }
 
     private func loadappicon(bundlepath: String) -> UIImage? {
         guard let bundle = Bundle(path: bundlepath) else { return nil }
@@ -221,68 +201,9 @@ struct AppsView: View {
     var body: some View {
         List {
             Section {
-                if isLoadingApps {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                } else if allApps.isEmpty {
-                    Text("No apps found")
-                        .foregroundColor(.secondary)
-                } else {
-                    ForEach(allApps) { app in
-                        HStack(spacing: 12) {
-                            if let icon = app.icon {
-                                Image(uiImage: icon)
-                                    .resizable()
-                                    .frame(width: 40, height: 40)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                            } else {
-                                Image(systemName: "app")
-                                    .resizable()
-                                    .frame(width: 40, height: 40)
-                                    .foregroundColor(.gray)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(app.name)
-                                    .font(.headline)
-                                
-                                Text(app.bundleIdentifier)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                                
-                                HStack(spacing: 8) {
-                                    if app.isSystem {
-                                        Label("System", systemImage: "star.fill")
-                                            .font(.caption2)
-                                            .foregroundColor(.orange)
-                                    } else {
-                                        Label("User", systemImage: "person")
-                                            .font(.caption2)
-                                            .foregroundColor(.blue)
-                                    }
-                                    
-                                    if app.hiddenFromSpringboard {
-                                        Label("Hidden", systemImage: "eye.slash")
-                                            .font(.caption2)
-                                            .foregroundColor(.gray)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    Text("v\(app.version)")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                    }
+                NavigationLink("View All Applications") {
+                    AllAppsView()
                 }
-            } header: {
-                Text("All Applications (\(allApps.count))")
             }
             
             Section {
@@ -322,7 +243,7 @@ struct AppsView: View {
                 Button {
                     sbx3apbypass()
                 } label: {
-                    Text("Bypass 3 App Limit")
+                    Text("Bypass 3 App Limit (Broken?)")
                 }
             } footer: {
                 Text("Needs to be reapplied everytime you sideload a new app.")
@@ -331,24 +252,15 @@ struct AppsView: View {
         .navigationTitle("Applications")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    Button {
-                        loadAllApps()
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                    
-                    Button {
-                        scanappssbx()
-                    } label: {
-                        Image(systemName: "checkmark.square")
-                    }
+                Button {
+                    scanappssbx()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
                 }
             }
         }
         .onAppear {
             scanappssbx()
-            loadAllApps()
         }
     }
 }

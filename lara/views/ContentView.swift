@@ -198,7 +198,7 @@ struct ContentView: View {
                                     }
                                 }
                                 
-                                NavigationLink("3 App Bypass (Broken?)") {
+                                NavigationLink("Apps Manager") {
                                     AppsView(mgr: mgr)
                                 }
                                 
@@ -206,11 +206,7 @@ struct ContentView: View {
                                     WhitelistView()
                                 }
                                 
-                                if betaFeaturesEnabled {
-                                    NavigationLink("Applications") {
-                                        AppsView(mgr: mgr)
-                                    }
-                                    
+                                if betaFeaturesEnabled {                                    
                                     NavigationLink("Passcode Theme") {
                                         PasscodeView(mgr: mgr)
                                     }
