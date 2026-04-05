@@ -185,7 +185,8 @@ struct EditorView: View {
             }
         }
         setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: 2796)
-        // try fm.replaceItemAt(URL(fileURLWithPath: URLpath), withItemAt: modURL)
+        let data = Data(contentsOf: modmgurl)
+        try data.write(to: URL(fileURLWithPath: path), options: .atomic)
     }
 
     private func revert_mg() {
@@ -194,6 +195,8 @@ struct EditorView: View {
             do {
                 let data = try Data(contentsOf: mgurl)
                 try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+                mgr.logmsg("reverted MobileGestalt plist")
+                // mgr.respring()
             } catch {
                 status = "failed to replace modified plist with original: \(error.localizedDescription)"
                 return
