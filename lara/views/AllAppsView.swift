@@ -110,19 +110,19 @@ struct AllAppsView: View {
                 }
             }
         }
-    }
-    .navigationTitle("All Applications (\(allApps.count))")
-    .searchable(text: $searchText, prompt: "Search apps")
-    .toolbar {
-        ToolbarItem(placement: .navigationBarTrailing) {
-            Button {
-                loadAllApps()
-            } label: {
-                Image(systemName: "arrow.clockwise")
+        .navigationTitle("All Applications (\(allApps.count))")
+        .searchable(text: $searchText, prompt: "Search apps")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    loadAllApps()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
             }
         }
-    }
-    .onAppear {
-        loadAllApps()
+        .onAppear {
+            loadAllApps()
+        }
     }
 }
