@@ -116,149 +116,111 @@ struct SBApp: Identifiable {
     
     private func loadIcon() -> UIImage? {
         guard let bundle = Bundle(path: bundleURL.path) else {
-            globallogger.log("[Icon] Failed to load bundle for \(name) at \(bundleURL.path)")
+            globallogger.log("[Icon] Failed to load bundle for \(name)")
             return nil
         }
         
-        globallogger.log("[Icon] Loading icon for: \(name)")
+        globallogger.log("[Icon] Loading: \(name)")
         
-        // Check if Assets.car exists and if we can read files
+        // Check if Assets.car exists
         let assetsCarPath = bundleURL.appendingPathComponent("Assets.car").path
         let hasAssetsCar = FileManager.default.fileExists(atPath: assetsCarPath)
-        globallogger.log("[Icon]   Has Assets.car: \(hasAssetsCar)")
         
-        // Test bundle file permissions
-        let infoPlistPath = bundleURL.appendingPathComponent("Info.plist").path
-        let canReadBundle = FileManager.default.fileExists(atPath: infoPlistPath)
-        globallogger.log("[Icon]   Can read bundle: \(canReadBundle)")
-        
-        // Comprehensive list of common icon names used in iOS apps
-        let possibleIconNames = [
-            "AppIcon",
-            "AppIcon60x60",
-            "AppIcon-60",
-            "icon",
-            "Icon",
-            "AppIcon1024",
-            "AppIcon180",
-            "AppIcon167",
-            "AppIcon152",
-            "AppIcon144",
-            "AppIcon120",
-            "AppIcon114",
-            "AppIcon76",
-            "AppIcon72",
-            "AppIcon57",
-            "App",
-            "app",
-            "logo",
-            "Logo",
-            "Product Icon Simple iOS"
-        ]
-        
-        // Try loading each icon name with current trait
-        globallogger.log("[Icon]   Trying standard icon names...")
-        for name in possibleIconNames {
-            let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current)
-            if image != nil {
-                globallogger.log("[Icon]   ✓ Found icon: \(name)")
-                return image
-            }
-        }
-        globallogger.log("[Icon]   ✗ No standard icon names worked")
-        
-        // Try CFBundleIcons from Info.plist with detailed logging
-        globallogger.log("[Icon]   Trying CFBundleIcons from Info.plist...")
-        if let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any] {
-            globallogger.log("[Icon]     CFBundleIcons keys: \(Array(icons.keys).joined(separator: ", "))")
-            
-            if let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] {
-                globallogger.log("[Icon]     CFBundlePrimaryIcon keys: \(Array(primary.keys).joined(separator: ", "))")
-                
-                if let iconName = primary["CFBundleIconName"] as? String {
-                    globallogger.log("[Icon]     CFBundleIconName: \(iconName)")
-                    let img = UIImage(named: iconName, in: bundle, compatibleWith: UITraitCollection.current)
-                    globallogger.log("[Icon]     UIImage result: \(img != nil ? "found" : "nil")")
-                    if img != nil {
-                        globallogger.log("[Icon]     ✓ Found icon from CFBundleIconName")
-                        return img
-                    }
-                }
-                
-                if let files = primary["CFBundleIconFiles"] as? [String] {
-                    globallogger.log("[Icon]     CFBundleIconFiles: \(files)")
-                    for name in files {
-                        let img = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current)
-                        if img != nil {
-                            globallogger.log("[Icon]     ✓ Found icon: \(name)")
-                            return img
-                        }
-                    }
-                    globallogger.log("[Icon]     No CFBundleIconFiles loaded")
-                }
-            }
-        } else {
-            globallogger.log("[Icon]     No CFBundleIcons in Info.plist")
-        }
-        
-        // Try CFBundleIconFile
-        globallogger.log("[Icon]   Trying CFBundleIconFile...")
-        if let name = bundle.infoDictionary?["CFBundleIconFile"] as? String {
-            globallogger.log("[Icon]     CFBundleIconFile: \(name)")
+        // Try standard AppIcon names first
+        let standardNames = ["AppIcon", "AppIcon60x60", "AppIcon180", "AppIcon152", "AppIcon144", "AppIcon120"]
+        for name in standardNames {
             if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
-                globallogger.log("[Icon]     ✓ Found icon")
+                globallogger.log("[Icon] ✓ \(self.name): loaded \(name)")
                 return image
             }
         }
         
-        // Try direct Assets.car parsing
-        if hasAssetsCar {
-            globallogger.log("[Icon]   Trying direct Assets.car parsing...")
-            do {
-                let carData = try Data(contentsOf: URL(fileURLWithPath: assetsCarPath))
-                globallogger.log("[Icon]     Assets.car size: \(carData.count) bytes")
-                
-                // Try to find PNG or JPEG in the file
-                let bytes = [UInt8](carData)
-                
-                // Search for PNG (89 50 4E 47)
-                for i in 0..<(bytes.count - 4) {
-                    if bytes[i] == 0x89 && bytes[i+1] == 0x50 && bytes[i+2] == 0x4E && bytes[i+3] == 0x47 {
-                        globallogger.log("[Icon]     Found PNG at offset \(i)")
-                        // Try to find end of PNG (IEND)
-                        var endIdx = i + 100
-                        while endIdx < bytes.count - 4 {
-                            if bytes[endIdx] == 0x49 && bytes[endIdx+1] == 0x45 && bytes[endIdx+2] == 0x4E && bytes[endIdx+3] == 0x44 {
-                                let pngData = carData.subdata(in: i..<(endIdx + 8))
-                                if let image = UIImage(data: pngData) {
-                                    globallogger.log("[Icon]     ✓ Extracted PNG from Assets.car")
-                                    return image
-                                }
-                                break
-                            }
-                            endIdx += 1
-                        }
-                    }
-                }
-            } catch {
-                globallogger.log("[Icon]     Failed to read Assets.car: \(error)")
-            }
-        }
-        
-        // Fallback to PNG files in bundle
-        globallogger.log("[Icon]   Trying PNG fallback (\(pngIconPaths.count) paths)...")
-        for iconPath in pngIconPaths {
-            let fullPath = bundleURL.appendingPathComponent(iconPath).path
-            if FileManager.default.fileExists(atPath: fullPath) {
-                globallogger.log("[Icon]     Trying: \(iconPath)")
-                if let image = UIImage(contentsOfFile: fullPath) {
-                    globallogger.log("[Icon]     ✓ Loaded PNG")
+        // Try CFBundleIcons from Info.plist
+        if let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
+           let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] {
+            if let iconName = primary["CFBundleIconName"] as? String {
+                if let image = UIImage(named: iconName, in: bundle, compatibleWith: UITraitCollection.current) {
+                    globallogger.log("[Icon] ✓ \(self.name): loaded CFBundleIconName \(iconName)")
                     return image
                 }
             }
+            if let files = primary["CFBundleIconFiles"] as? [String] {
+                for name in files {
+                    if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
+                        globallogger.log("[Icon] ✓ \(self.name): loaded CFBundleIconFiles \(name)")
+                        return image
+                    }
+                }
+            }
         }
         
-        globallogger.log("[Icon]   ✗ Failed to load icon for \(name)")
+        // If Assets.car exists and UIImage failed, parse it directly
+        if hasAssetsCar {
+            globallogger.log("[Icon] Parsing Assets.car directly for \(self.name)")
+            if let image = extractIconFromAssetsCar(assetsCarPath) {
+                globallogger.log("[Icon] ✓ \(self.name): extracted from Assets.car")
+                return image
+            }
+        }
+        
+        // Final fallback: PNG files
+        for iconPath in pngIconPaths {
+            let fullPath = bundleURL.appendingPathComponent(iconPath).path
+            if FileManager.default.fileExists(atPath: fullPath),
+               let image = UIImage(contentsOfFile: fullPath) {
+                globallogger.log("[Icon] ✓ \(self.name): loaded PNG")
+                return image
+            }
+        }
+        
+        globallogger.log("[Icon] ✗ \(self.name): no icon found")
+        return nil
+    }
+    
+    private func extractIconFromAssetsCar(_ path: String) -> UIImage? {
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
+        
+        let bytes = [UInt8](data)
+        
+        // Search for PNG headers (89 50 4E 47)
+        if let pngRange = findImageRange(in: bytes, headerPrefix: [0x89, 0x50, 0x4E, 0x47], headerSuffix: [0x49, 0x45, 0x4E, 0x44]) {
+            if let image = UIImage(data: data.subdata(in: pngRange)) {
+                return image
+            }
+        }
+        
+        // Search for JPEG headers (FF D8 FF)
+        if let jpegRange = findJPEGRange(in: bytes) {
+            if let image = UIImage(data: data.subdata(in: jpegRange)) {
+                return image
+            }
+        }
+        
+        return nil
+    }
+    
+    private func findImageRange(in bytes: [UInt8], headerPrefix: [UInt8], headerSuffix: [UInt8]) -> Range<Int>? {
+        guard let start = findPattern(in: bytes, pattern: headerPrefix) else { return nil }
+        guard let end = findPattern(in: bytes, pattern: headerSuffix, startIndex: start) else { return nil }
+        
+        return start..<(end + headerSuffix.count)
+    }
+    
+    private func findJPEGRange(in bytes: [UInt8]) -> Range<Int>? {
+        guard let start = findPattern(in: bytes, pattern: [0xFF, 0xD8, 0xFF]) else { return nil }
+        guard let end = findPattern(in: bytes, pattern: [0xFF, 0xD9], startIndex: start) else { return nil }
+        
+        return start..<(end + 2)
+    }
+    
+    private func findPattern(in bytes: [UInt8], pattern: [UInt8], startIndex: Int = 0) -> Int? {
+        guard pattern.count <= bytes.count - startIndex else { return nil }
+        
+        for i in startIndex...(bytes.count - pattern.count) {
+            if bytes[i..<(i + pattern.count)].elementsEqual(pattern) {
+                return i
+            }
+        }
         return nil
     }
 }
