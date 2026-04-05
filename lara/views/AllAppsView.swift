@@ -75,7 +75,7 @@ struct AllAppsView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .lineLimit(1)                                                                                                                                                                                           
-                                SPacer()
+                                Spacer()
                                 
                                 // HStack(spacing: 8) {
                                 //     if app.isSystem {
