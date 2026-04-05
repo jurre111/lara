@@ -40,18 +40,19 @@ struct AllAppsView: View {
     }
     
     var body: some View {
-        ScrollView {
-            if isLoadingApps {
-                HStack {
-                    Spacer()
-                    ProgressView()
-                    Spacer()
-                }
-            } else if filteredApps.isEmpty {
-                Text("No apps found")
-                    .foregroundColor(.secondary)
-            } else {
-                LazyVStack(spacing: 8) {
+        ZStack(alignment: .top) {
+            ScrollView {
+                if isLoadingApps {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    }
+                } else if filteredApps.isEmpty {
+                    Text("No apps found")
+                        .foregroundColor(.secondary)
+                } else {
+                    LazyVStack(spacing: 8) {
                     ForEach(filteredApps) { app in
                         HStack(spacing: 10) {
                             if let icon = app.icon {
@@ -114,9 +115,16 @@ struct AllAppsView: View {
                 }
                 .padding()
             }
+            .padding(.top, 60)
+        }
+        .overlay(alignment: .top) {
+            VStack {
+                SearchBar(text: $searchText)
+                Divider()
+            }
+            .background(Color(.systemBackground))
         }
         .navigationTitle("All Applications (\(allApps.count))")
-        .searchable(text: $searchText, prompt: "Search apps")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {

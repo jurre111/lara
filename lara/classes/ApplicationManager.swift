@@ -46,21 +46,24 @@ class ApplicationManager {
                 continue
             }
             
+            // Get display name with better fallbacks
+            var appName = "Unknown"
+            if let CFBundleDisplayName = infoPlist["CFBundleDisplayName"] as? String, !CFBundleDisplayName.trimmingCharacters(in: .whitespaces).isEmpty {
+                appName = CFBundleDisplayName
+            } else if let CFBundleName = infoPlist["CFBundleName"] as? String, !CFBundleName.trimmingCharacters(in: .whitespaces).isEmpty {
+                appName = CFBundleName
+            } else if let CFBundleExecutable = infoPlist["CFBundleExecutable"] as? String, !CFBundleExecutable.trimmingCharacters(in: .whitespaces).isEmpty {
+                appName = CFBundleExecutable
+            }
+            
             var app = SBApp(
                 bundleIdentifier: CFBundleIdentifier,
-                name: "Unknown",
+                name: appName,
                 version: infoPlist["CFBundleShortVersionString"] as? String ?? "1.0",
                 bundleURL: bundleUrl,
                 pngIconPaths: [],
                 hiddenFromSpringboard: false
             )
-            
-            // Get display name
-            if let CFBundleDisplayName = infoPlist["CFBundleDisplayName"] as? String {
-                app.name = CFBundleDisplayName
-            } else if let CFBundleName = infoPlist["CFBundleName"] as? String {
-                app.name = CFBundleName
-            }
             
             // Collect PNG icon paths
             if let CFBundleIcons = infoPlist["CFBundleIcons"] as? [String: AnyObject] {
@@ -114,9 +117,10 @@ struct SBApp: Identifiable {
     private func loadIcon() -> UIImage? {
         guard let bundle = Bundle(path: bundleURL.path) else { return nil }
         
-        // Get current appearance (light/dark mode)
-        let traitCollection = UITraitCollection.current
-        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        // Create trait collections for light and dark mode
+        let lightTraits = UITraitCollection(userInterfaceStyle: .light)
+        let darkTraits = UITraitCollection(userInterfaceStyle: .dark)
+        let currentTraits = UITraitCollection.current
         
         // Try CFBundleIcons from Assets.car first
         if let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
@@ -124,13 +128,15 @@ struct SBApp: Identifiable {
             
             // Get icon name from plist
             if let iconName = primary["CFBundleIconName"] as? String {
-                // Try loading from Assets.car with appearance
-                let appearanceVariant = isDarkMode ? "~dark" : ""
-                if let image = UIImage(named: iconName + appearanceVariant, in: bundle, compatibleWith: nil) {
+                // Try with current appearance first
+                if let image = UIImage(named: iconName, in: bundle, compatibleWith: currentTraits) {
                     return image
                 }
-                // Fallback to base icon name
-                if let image = UIImage(named: iconName, in: bundle, compatibleWith: nil) {
+                // Try with explicit dark/light traits
+                if let image = UIImage(named: iconName, in: bundle, compatibleWith: darkTraits) {
+                    return image
+                }
+                if let image = UIImage(named: iconName, in: bundle, compatibleWith: lightTraits) {
                     return image
                 }
             }
@@ -138,11 +144,13 @@ struct SBApp: Identifiable {
             // Try CFBundleIconFiles from Assets.car
             if let files = primary["CFBundleIconFiles"] as? [String] {
                 for name in files.reversed() {
-                    let appearanceVariant = isDarkMode ? "~dark" : ""
-                    if let image = UIImage(named: name + appearanceVariant, in: bundle, compatibleWith: nil) {
+                    if let image = UIImage(named: name, in: bundle, compatibleWith: currentTraits) {
                         return image
                     }
-                    if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+                    if let image = UIImage(named: name, in: bundle, compatibleWith: darkTraits) {
+                        return image
+                    }
+                    if let image = UIImage(named: name, in: bundle, compatibleWith: lightTraits) {
                         return image
                     }
                 }
@@ -151,11 +159,13 @@ struct SBApp: Identifiable {
         
         // Try CFBundleIconFile from Assets.car
         if let name = bundle.infoDictionary?["CFBundleIconFile"] as? String {
-            let appearanceVariant = isDarkMode ? "~dark" : ""
-            if let image = UIImage(named: name + appearanceVariant, in: bundle, compatibleWith: nil) {
+            if let image = UIImage(named: name, in: bundle, compatibleWith: currentTraits) {
                 return image
             }
-            if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+            if let image = UIImage(named: name, in: bundle, compatibleWith: darkTraits) {
+                return image
+            }
+            if let image = UIImage(named: name, in: bundle, compatibleWith: lightTraits) {
                 return image
             }
         }
@@ -165,11 +175,13 @@ struct SBApp: Identifiable {
            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
            let files = primary["CFBundleIconFiles"] as? [String] {
             for name in files.reversed() {
-                let appearanceVariant = isDarkMode ? "~dark" : ""
-                if let image = UIImage(named: name + appearanceVariant, in: bundle, compatibleWith: nil) {
+                if let image = UIImage(named: name, in: bundle, compatibleWith: currentTraits) {
                     return image
                 }
-                if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+                if let image = UIImage(named: name, in: bundle, compatibleWith: darkTraits) {
+                    return image
+                }
+                if let image = UIImage(named: name, in: bundle, compatibleWith: lightTraits) {
                     return image
                 }
             }
