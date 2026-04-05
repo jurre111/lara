@@ -185,8 +185,13 @@ struct EditorView: View {
             }
         }
         setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: 2796)
-        let data = try Data(contentsOf: modmgurl)
-        try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+        do {
+            let data = try Data(contentsOf: modmgurl)
+            try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+        } catch {
+            status = "failed to replace original plist with modified: \(error.localizedDescription)"
+            return
+        }
     }
 
     private func revert_mg() {
