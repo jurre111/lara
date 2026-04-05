@@ -17,6 +17,8 @@ struct EditorView: View {
     @State private var mgXML: String = ""
     @State private var status: String?
     @State private var respringAlert: String?
+    @State private var customSubType: Int = 2796
+    @State private var customSubTypeEnabled: Bool = false
     @AppStorage("currentSubType") private var currentSubType: Int = -1
     
 
@@ -48,10 +50,20 @@ struct EditorView: View {
                             Image(systemName: "arrow.clockwise")
                         }
                     }
+                    Toggle("Custom SubType", isOn: $customSubTypeEnabled)
+                    if customSubTypeEnabled {
+                        TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                } header: {
+                    Text("MobileGestalt")
+                }
+                Section {
                     Button() {
                         enable_dynisland()
                     } label: {
-                        Text("Enable Dynamic Island")
+                        Text(customSubTypeEnabled ? "Override SubType" : "Enable Dynamic Island")
                     }
                     Button() {
                         revert_mg()
@@ -60,7 +72,7 @@ struct EditorView: View {
                             .foregroundColor(.red)
                     }
                 } header: {
-                    Text("Modify")
+                    Text("Apply")
                 }
             }
             .navigationTitle("MobileGestalt")
@@ -169,7 +181,7 @@ struct EditorView: View {
                 return
             }
         }
-        setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: 2796)
+        setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: customSubType)
         do {
             let data = try Data(contentsOf: modmgurl)
             try data.write(to: URL(fileURLWithPath: path), options: .atomic)
