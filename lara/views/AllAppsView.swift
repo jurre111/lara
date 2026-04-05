@@ -66,16 +66,21 @@ struct AllAppsView: View {
                                     .foregroundColor(.gray)
                             }
                             
-                            VStack(alignment: .leading, spacing: 4) {
-                                Spacer()
-                                Text(app.name)
-                                    .font(.headline)
+                            VStack(alignment: .leading) {
+                                if app.name:
+                                    Text(app.name)
+                                        .font(.headline)
+                                else:
+                                    Text("Unknown App")
+                                        .font(.headline)
+                                        .foregroundColor(.secondary)
                                 Spacer()
                                 Text(app.bundleIdentifier)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                    .lineLimit(1)                                                                                                                                                                                           
-                                Spacer()
+                                    .lineLimit(1)
+                            }
+                            .frame(height: 40)
                                 
                                 // HStack(spacing: 8) {
                                 //     if app.isSystem {
@@ -100,25 +105,24 @@ struct AllAppsView: View {
                                 //         .font(.caption2)
                                 //         .foregroundColor(.secondary)
                                 // }
-                            }
                         }
                     }
                 }
             }
         }
-        .navigationTitle("All Applications (\(allApps.count))")
-        .searchable(text: $searchText, prompt: "Search apps")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    loadAllApps()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
+    }
+    .navigationTitle("All Applications (\(allApps.count))")
+    .searchable(text: $searchText, prompt: "Search apps")
+    .toolbar {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button {
+                loadAllApps()
+            } label: {
+                Image(systemName: "arrow.clockwise")
             }
         }
-        .onAppear {
-            loadAllApps()
-        }
+    }
+    .onAppear {
+        loadAllApps()
     }
 }
