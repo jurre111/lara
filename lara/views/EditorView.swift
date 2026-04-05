@@ -16,6 +16,7 @@ struct EditorView: View {
 
     @State private var mgXML: String = ""
     @State private var status: String?
+    @State private var respringAlert: String?
     @AppStorage("currentSubType") private var currentSubType: Int = -1
     
 
@@ -28,24 +29,6 @@ struct EditorView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    ScrollView {
-                        Text(mgXML)
-                            .font(.system(size: 13, design: .monospaced))
-                            .lineSpacing(1)
-                            .frame(height: 250)
-                            .truncationMode(.tail)
-                    }
-                    
-                    NavigationLink {
-                        
-                    } label: {
-                        Text("View")
-                    }
-                } header: {
-                    Text("com.apple.MobileGestalt.plist")
-                }
-
                 Section {
                     HStack {
                         Text("Current SubType:")
@@ -85,6 +68,12 @@ struct EditorView: View {
                 Button("OK") { status = nil }
             } message: {
                 Text(status ?? "")
+            }
+            .alert("Done", isPresented: .constant(respringAlert != nil)) {
+                Button("Cancel") { respringAlert = nil }
+                Button("Respring") { mgr.respring() }
+            } message: {
+                Text(respringAlert ?? "")
             }
             .onAppear(perform: load)
         }
@@ -184,8 +173,7 @@ struct EditorView: View {
         do {
             let data = try Data(contentsOf: modmgurl)
             try data.write(to: URL(fileURLWithPath: path), options: .atomic)
-            status = "enabled Dynamic Island, respring to see changes"
-            mgr.respring()
+            respringAlert = "enabled Dynamic Island, respring to see changes"
         } catch {
             status = "failed to replace original plist with modified: \(error.localizedDescription)"
             return
@@ -199,8 +187,7 @@ struct EditorView: View {
                 let data = try Data(contentsOf: mgurl)
                 try data.write(to: URL(fileURLWithPath: path), options: .atomic)
                 mgr.logmsg("reverted MobileGestalt plist")
-                status = "reverted MobileGestalt plist, respring to see changes"
-                mgr.respring()
+                respringAlert = "reverted MobileGestalt plist, respring to see changes"
             } catch {
                 status = "failed to replace modified plist with original: \(error.localizedDescription)"
                 return
