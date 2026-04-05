@@ -192,7 +192,8 @@ struct EditorView: View {
         let fm = FileManager.default
         if fm.fileExists(atPath: mgurl.path) {
             do {
-                try fm.replaceItemAt(URL(fileURLWithPath: path), withItemAt: mgurl)
+                data = try Data(contentsOf: mgurl)
+                try data.write(to: URL(fileURLWithPath: path), options: .atomic)
             } catch {
                 status = "failed to replace modified plist with original: \(error.localizedDescription)"
                 return
