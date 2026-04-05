@@ -53,7 +53,7 @@ struct EditorView: View {
                     Button() {
                         applySubType()
                     } {
-                        Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
+                        Text("go")
                     }
                 } header: {
                     Text("ArtworkDeviceSubType")
