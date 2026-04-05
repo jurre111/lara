@@ -207,6 +207,9 @@ struct ContentView: View {
                                 }
                                 
                                 if betaFeaturesEnabled {
+                                    NavigationLink("Applications") {
+                                        AppsView(mgr: mgr)
+                                    }
                                     
                                     NavigationLink("Passcode Theme") {
                                         PasscodeView(mgr: mgr)
