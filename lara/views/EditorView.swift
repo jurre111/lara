@@ -12,6 +12,7 @@ struct EditorView: View {
     
     private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let mgurl: URL
+    private let modmgurl: URL
 
     @State private var mgXML: String = ""
     @State private var status: String?
@@ -21,6 +22,7 @@ struct EditorView: View {
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         mgurl = docs.appendingPathComponent("OriginalMobileGestalt.plist")
+        modmgurl = docs.appendingPathComponent("ModifiedMobileGestalt.plist")
     }
 
     var body: some View {
@@ -57,11 +59,22 @@ struct EditorView: View {
                                 .font(.system(.body, design: .monospaced))
                                 .foregroundColor(.secondary)
                         }
+                        Button {
+                            load()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
                     }
                     Button() {
-                        // enable_dynisland()
+                        enable_dynisland()
                     } label: {
                         Text("Enable Dynamic Island")
+                    }
+                    Button() {
+                        // revert_mg()
+                    } label: {
+                        Text("Revert")
+                            .foregroundColor(.red)
                     }
                 } header: {
                     Text("Modify")
@@ -89,20 +102,14 @@ struct EditorView: View {
                 return
             }
         }
-
         do {
-            let data = try Data(contentsOf: mgurl)
-            let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-            let xmlData = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
-            mgXML = String(data: xmlData, encoding: .utf8) ?? "failed to encode XML"
-
             currentSubType = getPlistIntValue(plistPath: mgurl, key: "ArtworkDeviceSubType")
         } catch {
-            status = "failed to load plist: \(error.localizedDescription)"
+            status = "failed to load plist data: \(error.localizedDescription)"
         }
     }
     // copied from Cowabunga
-    func getPlistIntValue(plistPath: URL, key: String) -> Int {
+    private func getPlistIntValue(plistPath: URL, key: String) -> Int {
         // open plist
         guard let data = try? Data(contentsOf: plistPath) else {
             print("Could not get plist data!")
@@ -130,5 +137,66 @@ struct EditorView: View {
         
         // find the value
         return getDictValue(plist, key)
+    }
+    private func setPlistValueInt(plistPath: URL, key: String, value: Int) -> Bool {
+        let stringsData = try! Data(contentsOf: plistPath)
+        
+        // open plist
+        let plist = try! PropertyListSerialization.propertyList(from: stringsData, options: [], format: nil) as! [String: Any]
+        func changeDictValue(_ dict: [String: Any], _ key: String, _ value: Int) -> [String: Any] {
+            var newDict = dict
+            for (k, v) in dict {
+                if k == key {
+                    newDict[k] = value
+                } else if let subDict = v as? [String: Any] {
+                    newDict[k] = changeDictValue(subDict, key, value)
+                }
+            }
+            return newDict
+        }
+        
+        // modify value
+        var newPlist = plist
+        newPlist = changeDictValue(newPlist, key, value)
+        
+        // overwrite the plist
+        let newData = try! PropertyListSerialization.data(fromPropertyList: newPlist, format: .binary, options: 0)
+        if newData.count == stringsData.count {
+            do {
+                try newData.write(to: URL(fileURLWithPath: plistPath))
+                return true
+            } catch {
+                return false
+            }
+        } else {
+            // too big
+            return false
+        }
+    }
+
+    private func enable_dynisland() {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: mgurl.path) {
+            do {
+                try fm.copyItem(at: mgurl, to: modmgurl)
+            } catch {
+                status = "failed to copy plist: \(error.localizedDescription)"
+                return
+            }
+        }
+        setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: 2796)
+        // try fm.replaceItemAt(URL(fileURLWithPath: URLpath), withItemAt: modURL)
+    }
+
+    private func revert_mg() {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: mgurl.path) {
+            do {
+                try fm.replaceItemAt(URL(fileURLWithPath: path), withItemAt: mgurl)
+            } catch {
+                status = "failed to replace modified plist with original: \(error.localizedDescription)"
+                return
+            }
+        }
     }
 }
