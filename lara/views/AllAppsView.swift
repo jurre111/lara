@@ -51,28 +51,29 @@ struct AllAppsView: View {
                 Text("No apps found")
                     .foregroundColor(.secondary)
             } else {
-                LazyVStack(spacing: 12) {
+                LazyVStack(spacing: 8) {
                     ForEach(filteredApps) { app in
-                        HStack(spacing: 12) {
+                        HStack(spacing: 10) {
                             if let icon = app.icon {
                                 Image(uiImage: icon)
                                     .resizable()
+                                    .scaledToFill()
                                     .frame(width: 40, height: 40)
-                                    .padding(8)
                                     .clipShape(RoundedRectangle(cornerRadius: 8.9, style: .continuous))
                             } else {
                                 Image(systemName: "app")
                                     .resizable()
+                                    .scaledToFit()
                                     .frame(width: 40, height: 40)
-                                    .padding(8)
                                     .foregroundColor(.gray)
                             }
                             
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text(app.name ?? "Unknown App")
-                                    .font(.headline)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
                                 Text(app.bundleIdentifier)
-                                    .font(.caption)
+                                    .font(.caption2)
                                     .foregroundColor(.secondary)
                                     .lineLimit(1)
                             }
@@ -103,9 +104,10 @@ struct AllAppsView: View {
                                 //         .foregroundColor(.secondary)
                                 // }
                         }
-                        .padding()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
                         .background(
-                            RoundedRectangle(cornerRadius: 16)
+                            RoundedRectangle(cornerRadius: 12)
                                 .fill(Color(.secondarySystemGroupedBackground))
                         )
                     }
