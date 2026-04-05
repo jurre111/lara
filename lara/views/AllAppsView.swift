@@ -67,14 +67,8 @@ struct AllAppsView: View {
                             }
                             
                             VStack(alignment: .leading) {
-                                if app.name != nil {
-                                    Text(app.name!)
-                                        .font(.headline)
-                                } else {
-                                    Text("Unknown App")
-                                        .font(.headline)
-                                        .foregroundColor(.secondary)
-                                }
+                                Text(app.name ?? "Unknown App")
+                                    .font(.headline)
                                 Spacer()
                                 Text(app.bundleIdentifier)
                                     .font(.caption)
