@@ -103,7 +103,12 @@ struct EditorView: View {
             }
         }
         do {
-            currentSubType = getPlistIntValue(plistPath: mgurl, key: "ArtworkDeviceSubType")
+            fm = FileManager.default
+            if fm.fileExists(atPath: modmgurl.path) {
+                currentSubType = getPlistIntValue(plistPath: modmgurl, key: "ArtworkDeviceSubType")
+            } else {
+                currentSubType = getPlistIntValue(plistPath: mgurl, key: "ArtworkDeviceSubType")
+            }
         } catch {
             status = "failed to load plist data: \(error.localizedDescription)"
         }
