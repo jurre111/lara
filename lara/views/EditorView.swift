@@ -112,12 +112,8 @@ struct EditorView: View {
                 return
             }
         }
-        do {
-            let fm = FileManager.default
-            currentSubType = getPlistIntValue(plistPath: sysURL, key: "ArtworkDeviceSubType")
-        } catch {
-            status = "failed to load plist data: \(error.localizedDescription)"
-        }
+        let fm = FileManager.default
+        currentSubType = getPlistIntValue(plistPath: sysURL, key: "ArtworkDeviceSubType")
     }
     // copied from Cowabunga
     private func getPlistIntValue(plistPath: URL, key: String) -> Int {
