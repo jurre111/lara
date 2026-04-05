@@ -115,7 +115,17 @@ struct SBApp: Identifiable {
     }
     
     private func loadIcon() -> UIImage? {
-        guard let bundle = Bundle(path: bundleURL.path) else { return nil }
+        guard let bundle = Bundle(path: bundleURL.path) else {
+            globallogger.log("[Icon] Failed to load bundle for \(name) at \(bundleURL.path)")
+            return nil
+        }
+        
+        globallogger.log("[Icon] Loading icon for: \(name)")
+        
+        // Check if Assets.car exists
+        let assetsCarPath = bundleURL.appendingPathComponent("Assets.car").path
+        let hasAssetsCar = FileManager.default.fileExists(atPath: assetsCarPath)
+        globallogger.log("[Icon]   Has Assets.car: \(hasAssetsCar)")
         
         // Comprehensive list of common icon names used in iOS apps
         let possibleIconNames = [
@@ -142,23 +152,34 @@ struct SBApp: Identifiable {
         ]
         
         // Try loading each icon name with current trait
+        globallogger.log("[Icon]   Trying standard icon names...")
         for name in possibleIconNames {
             if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
+                globallogger.log("[Icon]   ✓ Found icon: \(name)")
                 return image
             }
         }
+        globallogger.log("[Icon]   ✗ No standard icon names worked")
         
         // Try CFBundleIcons from Info.plist
+        globallogger.log("[Icon]   Trying CFBundleIcons from Info.plist...")
         if let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] {
+            globallogger.log("[Icon]     Found CFBundleIcons")
+            
             if let iconName = primary["CFBundleIconName"] as? String {
+                globallogger.log("[Icon]     Trying CFBundleIconName: \(iconName)")
                 if let image = UIImage(named: iconName, in: bundle, compatibleWith: UITraitCollection.current) {
+                    globallogger.log("[Icon]     ✓ Found icon from CFBundleIconName")
                     return image
                 }
             }
+            
             if let files = primary["CFBundleIconFiles"] as? [String] {
+                globallogger.log("[Icon]     Trying CFBundleIconFiles: \(files)")
                 for name in files {
                     if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
+                        globallogger.log("[Icon]     ✓ Found icon: \(name)")
                         return image
                     }
                 }
@@ -166,22 +187,29 @@ struct SBApp: Identifiable {
         }
         
         // Try CFBundleIconFile
+        globallogger.log("[Icon]   Trying CFBundleIconFile...")
         if let name = bundle.infoDictionary?["CFBundleIconFile"] as? String {
+            globallogger.log("[Icon]     Trying: \(name)")
             if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
+                globallogger.log("[Icon]     ✓ Found icon")
                 return image
             }
         }
         
         // Fallback to PNG files in bundle
+        globallogger.log("[Icon]   Trying PNG fallback (\(pngIconPaths.count) paths)...")
         for iconPath in pngIconPaths {
             let fullPath = bundleURL.appendingPathComponent(iconPath).path
             if FileManager.default.fileExists(atPath: fullPath) {
+                globallogger.log("[Icon]     Trying: \(iconPath)")
                 if let image = UIImage(contentsOfFile: fullPath) {
+                    globallogger.log("[Icon]     ✓ Loaded PNG")
                     return image
                 }
             }
         }
         
+        globallogger.log("[Icon]   ✗ Failed to load icon for \(name)")
         return nil
     }
 }
