@@ -106,8 +106,6 @@ struct SBApp: Identifiable {
     var pngIconPaths: [String]
     var hiddenFromSpringboard: Bool
     
-    private var cachedIcon: UIImage?
-    
     var isSystem: Bool {
         bundleURL.pathComponents.count >= 2 && bundleURL.pathComponents[1] == "Applications"
     }
