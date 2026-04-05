@@ -40,7 +40,7 @@ struct AllAppsView: View {
     }
     
     var body: some View {
-        List {
+        ScrollView {
             if isLoadingApps {
                 HStack {
                     Spacer()
@@ -51,8 +51,8 @@ struct AllAppsView: View {
                 Text("No apps found")
                     .foregroundColor(.secondary)
             } else {
-                ForEach(filteredApps) { app in
-                    Section {
+                LazyVStack(spacing: 12) {
+                    ForEach(filteredApps) { app in
                         HStack(spacing: 12) {
                             if let icon = app.icon {
                                 Image(uiImage: icon)
@@ -101,8 +101,14 @@ struct AllAppsView: View {
                                 //         .foregroundColor(.secondary)
                                 // }
                         }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.secondarySystemGroupedBackground))
+                        )
                     }
                 }
+                .padding()
             }
         }
         .navigationTitle("All Applications (\(allApps.count))")
