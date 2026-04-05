@@ -104,11 +104,7 @@ struct EditorView: View {
         }
         do {
             let fm = FileManager.default
-            if fm.fileExists(atPath: modmgurl.path) {
-                currentSubType = getPlistIntValue(plistPath: modmgurl, key: "ArtworkDeviceSubType")
-            } else {
-                currentSubType = getPlistIntValue(plistPath: mgurl, key: "ArtworkDeviceSubType")
-            }
+            currentSubType = getPlistIntValue(plistPath: URL(fileURWithPath: path), key: "ArtworkDeviceSubType")
         } catch {
             status = "failed to load plist data: \(error.localizedDescription)"
         }
@@ -188,6 +184,8 @@ struct EditorView: View {
         do {
             let data = try Data(contentsOf: modmgurl)
             try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+            status = "enabled Dynamic Island, respring to see changes"
+            mgr.respring()
         } catch {
             status = "failed to replace original plist with modified: \(error.localizedDescription)"
             return
@@ -201,7 +199,8 @@ struct EditorView: View {
                 let data = try Data(contentsOf: mgurl)
                 try data.write(to: URL(fileURLWithPath: path), options: .atomic)
                 mgr.logmsg("reverted MobileGestalt plist")
-                // mgr.respring()
+                status = "reverted MobileGestalt plist, respring to see changes"
+                mgr.respring()
             } catch {
                 status = "failed to replace modified plist with original: \(error.localizedDescription)"
                 return
