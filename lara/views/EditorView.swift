@@ -32,18 +32,22 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    // HStack {
-                    //     Text("Current SubType:")
-                    //     Spacer()
-                    //     if currentSubType != -1 {
-                    //         Text(String(currentSubType))
-                    //     }
-                    //     Button {
-                    //         load()
-                    //     } label: {
-                    //         Image(systemName: "arrow.clockwise")
-                    //     }
-                    // }
+                    HStack {
+                        Text("Current SubType:")
+                        Spacer()
+                        if currentSubType != -1 {
+                            Text(String(currentSubType))
+                        }
+                        Button {
+                            load()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                    }
+                } header: {
+                    Text("MobileGestalt data")
+                }
+                Section {
                     Toggle("Custom SubType", isOn: $customSubTypeEnabled)
                     if customSubTypeEnabled {
                         TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
@@ -53,7 +57,7 @@ struct EditorView: View {
                     Button() {
                         applySubType()
                     } {
-                        Text("customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island"")
+                        Text("customSubTypeEnabled" ? "Replace SubType" : "Enable Dynamic Island")
                     }
                 } header: {
                     Text("ArtworkDeviceSubType")
