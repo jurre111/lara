@@ -15,15 +15,12 @@ struct EditorView: View {
 
     @State private var mgXML: String = ""
     @State private var status: String?
-    @AppStorage("currentSubType") private var currentSubType: String = ""
+    @AppStorage("currentSubType") private var currentSubType: Int = -1
     
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let orimg = docs.appendingPathComponent("OriginalMobileGestalt.plist")
-        currentSubType = getPlistIntValue(plistPath: orimg, key: "ArtworkDeviceSubType")
-
-
     }
 
     var body: some View {
@@ -51,7 +48,7 @@ struct EditorView: View {
                     HStack {
                         Text("Current SubType:")
                         Spacer()
-                        Text($currentSubType.wrappedValue)
+                        Text(currentSubType != -1 ? String(currentSubType.wrappedValue) : "Error")
                             .font(.system(.body, design: .monospaced))
                             .foregroundColor(.secondary)
                     }
@@ -92,14 +89,16 @@ struct EditorView: View {
             let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             let xmlData = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
             mgXML = String(data: xmlData, encoding: .utf8) ?? "failed to encode XML"
+
+            currentSubType = getPlistIntValue(plistPath: orimg, key: "ArtworkDeviceSubType")
         } catch {
             status = "failed to load plist: \(error.localizedDescription)"
         }
     }
     // copied from Cowabunga
-    func getPlistIntValue(plistPath: String, key: String) -> Int {
+    func getPlistIntValue(plistPath: URL, key: String) -> Int {
         // open plist
-        guard let data = try? Data(contentsOf: URL(fileURLWithPath: plistPath)) else {
+        guard let data = try? Data(contentsOf: plistPath) else {
             print("Could not get plist data!")
             return -1
         }
