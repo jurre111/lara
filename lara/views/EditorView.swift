@@ -31,41 +31,7 @@ struct EditorView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    Group {
-                        HStack {
-                            Text("Current SubType:")
-                            Spacer()
-                            if currentSubType != -1 {
-                                Text(String(currentSubType))
-                                    .font(.system(.body, design: .monospaced))
-                                    .foregroundColor(.secondary)
-                            } else {
-                                Text("unknown")
-                                    .font(.system(.body, design: .monospaced))
-                                    .foregroundColor(.secondary)
-                            }
-                            Button {
-                                load()
-                            } label: {
-                                Image(systemName: "arrow.clockwise")
-                            }
-                        }
-                        Toggle("Custom SubType", isOn: $customSubTypeEnabled)
-                        if customSubTypeEnabled {
-                            TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
-                                .keyboardType(.numberPad)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                        Button() {
-                            applySubType()
-                        } {
-                            Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
-                        }
-                    } header: {
-                        Text("ArtworkDeviceSubType")
-                    }
-                }
+                subTypeView()
                 Section {
                     Button() {
                         apply_mg()
@@ -215,6 +181,44 @@ struct EditorView: View {
                 status = "failed to replace modified plist with original: \(error.localizedDescription)"
                 return
             }
+        }
+    }
+}
+
+private var subTypeView: some View {
+    Section {
+        Group {
+            HStack {
+                Text("Current SubType:")
+                Spacer()
+                if currentSubType != -1 {
+                    Text(String(currentSubType))
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("unknown")
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundColor(.secondary)
+                }
+                Button {
+                    load()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+            }
+            Toggle("Custom SubType", isOn: $customSubTypeEnabled)
+            if customSubTypeEnabled {
+                TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
+                    .keyboardType(.numberPad)
+                    .textFieldStyle(.roundedBorder)
+            }
+            Button() {
+                applySubType()
+            } {
+                Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
+            }
+        } header: {
+            Text("ArtworkDeviceSubType")
         }
     }
 }
