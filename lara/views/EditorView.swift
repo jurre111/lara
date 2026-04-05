@@ -20,17 +20,29 @@ struct EditorView: View {
     @State private var customSubType: Int = 2796
     @State private var customSubTypeEnabled: Bool = false
     @AppStorage("currentSubType") private var currentSubType: Int = -1
+    @AppStorage("AODEnabled") private var AODEnabled: Bool = false
     
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         mgurl = docs.appendingPathComponent("OriginalMobileGestalt.plist")
         modmgurl = docs.appendingPathComponent("ModifiedMobileGestalt.plist")
+        AODEnabled = getPlistIntValue(plistPath: URL(fileURLWithPath: path), key: "2OOJf1VhaM7NxfRok3HbWQ") != 0
     }
 
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    Toggle("Enable AOD", isOn: $AODEnabled)
+                    Button() {
+                        applyAOD()
+                    } label: {
+                        Text("Apply")
+                    }
+                } header: {
+                    Text("AOD")
+                }
                 Section {
                     HStack {
                         Text("Current SubType:")
@@ -44,7 +56,7 @@ struct EditorView: View {
                             Image(systemName: "arrow.clockwise")
                         }
                     }
-                    Toggle("Custom SubType", isOn: $customSubTypeEnabled)
+                    Toggle("Custom SubType (risky)", isOn: $customSubTypeEnabled)
                     if customSubTypeEnabled {
                         TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
                             .keyboardType(.numberPad)
@@ -179,6 +191,20 @@ struct EditorView: View {
             }
         }
         setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: customSubType)
+    }
+
+    private func applyAOD() {
+        let fm = FileManager.default
+        if !fm.fileExists(atPath: modmgurl.path) {
+            do {
+                try fm.copyItem(at: mgurl, to: modmgurl)
+            } catch {
+                status = "failed to copy plist: \(error.localizedDescription)"
+                return
+            }
+        }
+        setPlistValueInt(plistPath: modmgurl, key: "2OOJf1VhaM7NxfRok3HbWQ", value: AODEnabled ? 1 : 0)
+        setPlistValueInt(plistPath: modmgurl, key: "j8/Omm6s1lsmTDFsXjsBfA", value: AODEnabled ? 1 : 0)
     }
 
     private func apply_mg() {
