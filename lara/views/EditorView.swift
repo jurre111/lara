@@ -46,7 +46,7 @@ struct EditorView: View {
                     }
                     Toggle("Custom SubType", isOn: $customSubTypeEnabled)
                     if customSubTypeEnabled {
-                        TextField("SubType eg. 2796", value: $customSubType)
+                        TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
                             .keyboardType(.numberPad)
                     }
                     Button() {
@@ -63,18 +63,18 @@ struct EditorView: View {
                     Button() {
                         apply_mg()
                     } label: {
-                        Text("Apply")
+                        Text("Apply Modified MobileGestalt")
                     }
                     Button() {
                         revert_mg()
                     } label: {
-                        Text("Revert")
+                        Text("Revert MobileGestalt")
                             .foregroundColor(.red)
                     }
                 } header: {
                     Text("Apply")
                 } footer: {
-                    Text("Note: you can use file manager to edit the modified plist to modify more keys.")
+                    Text("Note: you can use a file manager to edit the modified plist in lara's Documents folder to modify more keys.")
                 }
             }
             .navigationTitle("MobileGestalt")
@@ -202,7 +202,7 @@ struct EditorView: View {
                 let data = try Data(contentsOf: mgurl)
                 try data.write(to: URL(fileURLWithPath: path), options: .atomic)
                 mgr.logmsg("reverted MobileGestalt plist")
-                respringAlert = "reverted MobileGestalt plist, respring to see changes"
+                respringAlert = "Reverted MobileGestalt plist, respring to see changes"
             } catch {
                 status = "failed to replace modified plist with original: \(error.localizedDescription)"
                 return
