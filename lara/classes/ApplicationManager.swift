@@ -117,86 +117,87 @@ struct SBApp: Identifiable {
     private func loadIcon() -> UIImage? {
         guard let bundle = Bundle(path: bundleURL.path) else { return nil }
         
-        // Create trait collections for light and dark mode
-        let lightTraits = UITraitCollection(userInterfaceStyle: .light)
-        let darkTraits = UITraitCollection(userInterfaceStyle: .dark)
-        let currentTraits = UITraitCollection.current
+        // Get Assets.car and extract the app icon
+        let assetsCarPath = bundleURL.appendingPathComponent("Assets.car").path
+        let fm = FileManager.default
         
-        // Try CFBundleIcons from Assets.car first
-        if let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
-           let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] {
-            
-            // Get icon name from plist
-            if let iconName = primary["CFBundleIconName"] as? String {
-                // Try with current appearance first
-                if let image = UIImage(named: iconName, in: bundle, compatibleWith: currentTraits) {
-                    return image
-                }
-                // Try with explicit dark/light traits
-                if let image = UIImage(named: iconName, in: bundle, compatibleWith: darkTraits) {
-                    return image
-                }
-                if let image = UIImage(named: iconName, in: bundle, compatibleWith: lightTraits) {
-                    return image
-                }
-            }
-            
-            // Try CFBundleIconFiles from Assets.car
-            if let files = primary["CFBundleIconFiles"] as? [String] {
-                for name in files.reversed() {
-                    if let image = UIImage(named: name, in: bundle, compatibleWith: currentTraits) {
-                        return image
-                    }
-                    if let image = UIImage(named: name, in: bundle, compatibleWith: darkTraits) {
-                        return image
-                    }
-                    if let image = UIImage(named: name, in: bundle, compatibleWith: lightTraits) {
-                        return image
-                    }
-                }
-            }
-        }
-        
-        // Try CFBundleIconFile from Assets.car
-        if let name = bundle.infoDictionary?["CFBundleIconFile"] as? String {
-            if let image = UIImage(named: name, in: bundle, compatibleWith: currentTraits) {
-                return image
-            }
-            if let image = UIImage(named: name, in: bundle, compatibleWith: darkTraits) {
-                return image
-            }
-            if let image = UIImage(named: name, in: bundle, compatibleWith: lightTraits) {
+        if fm.fileExists(atPath: assetsCarPath) {
+            if let image = extractImageFromAssetsCar(path: assetsCarPath) {
                 return image
             }
         }
         
-        // Try CFBundleIcons~ipad as fallback
-        if let icons = bundle.infoDictionary?["CFBundleIcons~ipad"] as? [String: Any],
-           let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
-           let files = primary["CFBundleIconFiles"] as? [String] {
-            for name in files.reversed() {
-                if let image = UIImage(named: name, in: bundle, compatibleWith: currentTraits) {
-                    return image
-                }
-                if let image = UIImage(named: name, in: bundle, compatibleWith: darkTraits) {
-                    return image
-                }
-                if let image = UIImage(named: name, in: bundle, compatibleWith: lightTraits) {
+        return nil
+    }
+    
+    private func extractImageFromAssetsCar(path: String) -> UIImage? {
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
+        
+        let bytes = [UInt8](data)
+        
+        // Search for PNG header (89 50 4E 47)
+        let pngHeader: [UInt8] = [0x89, 0x50, 0x4E, 0x47]
+        // Search for JPEG header (FF D8 FF)
+        let jpegHeader: [UInt8] = [0xFF, 0xD8, 0xFF]
+        
+        // Look for PNG
+        if let pngRange = findImageData(in: bytes, header: pngHeader, endMarker: [0x49, 0x45, 0x4E, 0x44]) {
+            if let image = UIImage(data: data.subdata(in: pngRange)) {
+                return image
+            }
+        }
+        
+        // Look for JPEG
+        if let jpegStart = findImageStart(in: bytes, header: jpegHeader) {
+            if let jpegEnd = findJPEGEnd(in: bytes, start: jpegStart) {
+                let jpegRange = jpegStart..<jpegEnd
+                if let image = UIImage(data: data.subdata(in: jpegRange)) {
                     return image
                 }
             }
         }
         
-        // Load PNG icon directly from pngIconPaths as last resort
-        for iconPath in pngIconPaths {
-            let fullPath = bundleURL.appendingPathComponent(iconPath).path
-            if FileManager.default.fileExists(atPath: fullPath) {
-                if let image = UIImage(contentsOfFile: fullPath) {
-                    return image
-                }
+        return nil
+    }
+    
+    private func findImageStart(in bytes: [UInt8], header: [UInt8]) -> Int? {
+        guard !header.isEmpty else { return nil }
+        
+        for i in 0...(bytes.count - header.count) {
+            if bytes[i..<(i + header.count)].elementsEqual(header) {
+                return i
             }
         }
+        return nil
+    }
+    
+    private func findImageData(in bytes: [UInt8], header: [UInt8], endMarker: [UInt8]) -> Range<Int>? {
+        guard let start = findImageStart(in: bytes, header: header) else { return nil }
+        guard let endIndex = findImageEnd(in: bytes, start: start, endMarker: endMarker) else { return nil }
         
+        return start..<(endIndex + endMarker.count)
+    }
+    
+    private func findImageEnd(in bytes: [UInt8], start: Int, endMarker: [UInt8]) -> Int? {
+        guard !endMarker.isEmpty else { return nil }
+        
+        for i in start...(bytes.count - endMarker.count) {
+            if bytes[i..<(i + endMarker.count)].elementsEqual(endMarker) {
+                return i
+            }
+        }
+        return nil
+    }
+    
+    private func findJPEGEnd(in bytes: [UInt8], start: Int) -> Int? {
+        // JPEG ends with FF D9
+        let jpegEnd: [UInt8] = [0xFF, 0xD9]
+        
+        for i in start...(bytes.count - jpegEnd.count) {
+            if bytes[i..<(i + jpegEnd.count)].elementsEqual(jpegEnd) {
+                return i + jpegEnd.count
+            }
+        }
         return nil
     }
 }
