@@ -185,7 +185,7 @@ struct EditorView: View {
             }
         }
         setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: 2796)
-        let data = Data(contentsOf: modmgurl)
+        let data = try Data(contentsOf: modmgurl)
         try data.write(to: URL(fileURLWithPath: path), options: .atomic)
     }
 
