@@ -31,7 +31,39 @@ struct EditorView: View {
     var body: some View {
         NavigationStack {
             List {
-                subTypeView()
+                Section {
+                    Group {
+                        HStack {
+                            Text("Current SubType:")
+                            Spacer()
+                            if currentSubType != -1 {
+                                Text(String(currentSubType))
+                            } else {
+                                Text("unknown")
+                            }
+                            Button {
+                                load()
+                            } label: {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                        }
+                        Toggle("Custom SubType", isOn: $customSubTypeEnabled)
+                        if customSubTypeEnabled {
+                            TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
+                                .keyboardType(.numberPad)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        Button() {
+                            applySubType()
+                        } {
+                            Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
+                        }
+                    }
+                } header: {
+                    Text("ArtworkDeviceSubType")
+                }
+                
+                
                 Section {
                     Button() {
                         apply_mg()
@@ -78,7 +110,6 @@ struct EditorView: View {
                 return
             }
         }
-        let fm = FileManager.default
         currentSubType = getPlistIntValue(plistPath: sysURL, key: "ArtworkDeviceSubType")
     }
     // copied from Cowabunga
@@ -182,43 +213,5 @@ struct EditorView: View {
                 return
             }
         }
-    }
-}
-
-private var subTypeView: some View {
-    Section {
-        Group {
-            HStack {
-                Text("Current SubType:")
-                Spacer()
-                if currentSubType != -1 {
-                    Text(String(currentSubType))
-                        .font(.system(.body, design: .monospaced))
-                        .foregroundColor(.secondary)
-                } else {
-                    Text("unknown")
-                        .font(.system(.body, design: .monospaced))
-                        .foregroundColor(.secondary)
-                }
-                Button {
-                    load()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
-            }
-            Toggle("Custom SubType", isOn: $customSubTypeEnabled)
-            if customSubTypeEnabled {
-                TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
-            }
-            Button() {
-                applySubType()
-            } {
-                Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
-            }
-        }
-    } header: {
-        Text("ArtworkDeviceSubType")
     }
 }
