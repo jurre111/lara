@@ -32,19 +32,19 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    HStack {
-                        Text("Current SubType:")
-                        Spacer()
-                        if currentSubType != -1 {
-                            Text(String(currentSubType))
-                        }
-                        Button {
-                            load()
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                        }
-                    }
-                    // Toggle("Custom SubType", isOn: $customSubTypeEnabled)
+                    // HStack {
+                    //     Text("Current SubType:")
+                    //     Spacer()
+                    //     if currentSubType != -1 {
+                    //         Text(String(currentSubType))
+                    //     }
+                    //     Button {
+                    //         load()
+                    //     } label: {
+                    //         Image(systemName: "arrow.clockwise")
+                    //     }
+                    // }
+                    Toggle("Custom SubType", isOn: $customSubTypeEnabled)
                     if customSubTypeEnabled {
                         TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
                             .keyboardType(.numberPad)
@@ -53,7 +53,7 @@ struct EditorView: View {
                     Button() {
                         applySubType()
                     } {
-                        Text("go")
+                        Text("customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island"")
                     }
                 } header: {
                     Text("ArtworkDeviceSubType")
