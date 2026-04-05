@@ -104,7 +104,7 @@ struct EditorView: View {
         }
         do {
             let fm = FileManager.default
-            currentSubType = getPlistIntValue(plistPath: URL(fileURWithPath: path), key: "ArtworkDeviceSubType")
+            currentSubType = getPlistIntValue(plistPath: sysURL, key: "ArtworkDeviceSubType")
         } catch {
             status = "failed to load plist data: \(error.localizedDescription)"
         }
