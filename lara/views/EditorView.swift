@@ -46,7 +46,7 @@ struct EditorView: View {
                     }
                     Toggle("Custom SubType", isOn: $customSubTypeEnabled)
                     if customSubTypeEnabled {
-                        TextField("SubType eg. 2796", value: $customSubType, format: .number)
+                        TextField("SubType eg. 2796", value: $customSubType)
                             .keyboardType(.numberPad)
                     }
                     Button() {
