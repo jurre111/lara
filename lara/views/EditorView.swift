@@ -45,11 +45,11 @@ struct EditorView: View {
                     //     }
                     // }
                     Toggle("Custom SubType", isOn: $customSubTypeEnabled)
-                    if customSubTypeEnabled {
-                        TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
-                            .keyboardType(.numberPad)
-                            .textFieldStyle(.roundedBorder)
-                    }
+                    // if customSubTypeEnabled {
+                    //     TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
+                    //         .keyboardType(.numberPad)
+                    //         .textFieldStyle(.roundedBorder)
+                    // }
                     Button() {
                         applySubType()
                     } {
