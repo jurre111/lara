@@ -44,11 +44,12 @@ struct EditorView: View {
                             Image(systemName: "arrow.clockwise")
                         }
                     }
-                    Toggle("Custom SubType", isOn: $customSubTypeEnabled)
-                    if customSubTypeEnabled {
-                        TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
-                            .keyboardType(.numberPad)
-                            .textFieldStyle(.roundedBorder)
+                    Form {
+                        Toggle("Custom SubType", isOn: $customSubTypeEnabled)
+                        if customSubTypeEnabled {
+                            TextField("SubType eg. 2796", value: $customSubType, format: .number)
+                                .keyboardType(.numberPad)
+                        }
                     }
                     Button() {
                         applySubType()
