@@ -58,24 +58,26 @@ struct AllAppsView: View {
                                 Image(uiImage: icon)
                                     .resizable()
                                     .frame(width: 40, height: 40)
+                                    .padding(8)
                                     .clipShape(RoundedRectangle(cornerRadius: 8.9, style: .continuous))
                             } else {
                                 Image(systemName: "app")
                                     .resizable()
                                     .frame(width: 40, height: 40)
+                                    .padding(8)
                                     .foregroundColor(.gray)
                             }
                             
-                            VStack(alignment: .leading) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(app.name ?? "Unknown App")
                                     .font(.headline)
-                                Spacer()
                                 Text(app.bundleIdentifier)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .lineLimit(1)
                             }
-                            .frame(height: 40)
+
+                            Spacer()
                                 
                                 // HStack(spacing: 8) {
                                 //     if app.isSystem {
