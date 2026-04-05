@@ -53,71 +53,47 @@ struct AllAppsView: View {
                         .foregroundColor(.secondary)
                 } else {
                     LazyVStack(spacing: 8) {
-                    ForEach(filteredApps) { app in
-                        HStack(spacing: 10) {
-                            if let icon = app.icon {
-                                Image(uiImage: icon)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 40, height: 40)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8.9, style: .continuous))
-                            } else {
-                                Image(systemName: "app")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40, height: 40)
-                                    .foregroundColor(.gray)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(app.name ?? "Unknown App")
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                Text(app.bundleIdentifier)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                            }
-
-                            Spacer()
+                        ForEach(filteredApps) { app in
+                            HStack(spacing: 10) {
+                                if let icon = app.icon {
+                                    Image(uiImage: icon)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 40, height: 40)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8.9, style: .continuous))
+                                } else {
+                                    Image(systemName: "app")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 40, height: 40)
+                                        .foregroundColor(.gray)
+                                }
                                 
-                                // HStack(spacing: 8) {
-                                //     if app.isSystem {
-                                //         Label("System", systemImage: "star.fill")
-                                //             .font(.caption2)
-                                //             .foregroundColor(.orange)
-                                //     } else {
-                                //         Label("User", systemImage: "person")
-                                //             .font(.caption2)
-                                //             .foregroundColor(.blue)
-                                //     }
-                                //     
-                                //     if app.hiddenFromSpringboard {
-                                //         Label("Hidden", systemImage: "eye.slash")
-                                //             .font(.caption2)
-                                //             .foregroundColor(.gray)
-                                //     }
-                                //     
-                                //     Spacer()
-                                //     
-                                //     Text("v\(app.version)")
-                                //         .font(.caption2)
-                                //         .foregroundColor(.secondary)
-                                // }
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(app.name ?? "Unknown App")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text(app.bundleIdentifier)
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color(.secondarySystemGroupedBackground))
+                            )
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.secondarySystemGroupedBackground))
-                        )
                     }
+                    .padding()
                 }
-                .padding()
             }
             .padding(.top, 60)
-        }
-        .overlay(alignment: .top) {
+            
             VStack {
                 SearchBar(text: $searchText)
                 Divider()
