@@ -15,10 +15,15 @@ struct EditorView: View {
 
     @State private var mgXML: String = ""
     @State private var status: String?
+    @AppStorage("currentSubType") private var currentSubType: String = ""
+    
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        modurl = docs.appendingPathComponent("MobileGestalt.plist")
+        let orimg = docs.appendingPathComponent("OriginalMobileGestalt.plist")
+        currentSubType = getPlistIntValue(plistPath: orimg, key: "ArtworkDeviceSubType")
+
+
     }
 
     var body: some View {
@@ -40,6 +45,23 @@ struct EditorView: View {
                     }
                 } header: {
                     Text("com.apple.MobileGestalt.plist")
+                }
+
+                Section {
+                    HStack {
+                        Text("Current SubType:")
+                        Spacer()
+                        Text($currentSubType.wrappedValue)
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+                    Button() {
+                        // enable_dynisland()
+                    } label: {
+                        Text("Enable Dynamic Island")
+                    }
+                } header: {
+                    Text("Modify")
                 }
             }
             .navigationTitle("MobileGestalt")
@@ -73,5 +95,35 @@ struct EditorView: View {
         } catch {
             status = "failed to load plist: \(error.localizedDescription)"
         }
+    }
+    // copied from Cowabunga
+    func getPlistIntValue(plistPath: String, key: String) -> Int {
+        // open plist
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: plistPath)) else {
+            print("Could not get plist data!")
+            return -1
+        }
+        guard let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] else {
+            print("Could not convert plist!")
+            return -1
+        }
+        
+        func getDictValue(_ dict: [String: Any], _ key: String) -> Int {
+            for (k, v) in dict {
+                if k == key {
+                    return dict[k] as! Int
+                } else if let subDict = v as? [String: Any] {
+                    let temp: Int = getDictValue(subDict, key)
+                    if temp != -1 {
+                        return temp
+                    }
+                }
+            }
+            // did not find key in dictionary
+            return -1
+        }
+        
+        // find the value
+        return getDictValue(plist, key)
     }
 }
