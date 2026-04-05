@@ -117,25 +117,48 @@ struct SBApp: Identifiable {
     private func loadIcon() -> UIImage? {
         guard let bundle = Bundle(path: bundleURL.path) else { return nil }
         
-        // Try standard AppIcon names first (most common in Assets.car)
-        let standardNames = ["AppIcon", "AppIcon60x60", "icon", "Icon", "AppIcon-60"]
-        for name in standardNames {
-            if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+        // Comprehensive list of common icon names used in iOS apps
+        let possibleIconNames = [
+            "AppIcon",
+            "AppIcon60x60",
+            "AppIcon-60",
+            "icon",
+            "Icon",
+            "AppIcon1024",
+            "AppIcon180",
+            "AppIcon167",
+            "AppIcon152",
+            "AppIcon144",
+            "AppIcon120",
+            "AppIcon114",
+            "AppIcon76",
+            "AppIcon72",
+            "AppIcon57",
+            "App",
+            "app",
+            "logo",
+            "Logo",
+            "Product Icon Simple iOS"
+        ]
+        
+        // Try loading each icon name with current trait
+        for name in possibleIconNames {
+            if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
                 return image
             }
         }
         
-        // Try names from Info.plist CFBundleIcons
+        // Try CFBundleIcons from Info.plist
         if let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] {
             if let iconName = primary["CFBundleIconName"] as? String {
-                if let image = UIImage(named: iconName, in: bundle, compatibleWith: nil) {
+                if let image = UIImage(named: iconName, in: bundle, compatibleWith: UITraitCollection.current) {
                     return image
                 }
             }
             if let files = primary["CFBundleIconFiles"] as? [String] {
                 for name in files {
-                    if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+                    if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
                         return image
                     }
                 }
@@ -144,8 +167,18 @@ struct SBApp: Identifiable {
         
         // Try CFBundleIconFile
         if let name = bundle.infoDictionary?["CFBundleIconFile"] as? String {
-            if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+            if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
                 return image
+            }
+        }
+        
+        // Fallback to PNG files in bundle
+        for iconPath in pngIconPaths {
+            let fullPath = bundleURL.appendingPathComponent(iconPath).path
+            if FileManager.default.fileExists(atPath: fullPath) {
+                if let image = UIImage(contentsOfFile: fullPath) {
+                    return image
+                }
             }
         }
         
