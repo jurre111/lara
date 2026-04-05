@@ -217,8 +217,8 @@ private var subTypeView: some View {
             } {
                 Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
             }
-        } header: {
-            Text("ArtworkDeviceSubType")
         }
+    } header: {
+        Text("ArtworkDeviceSubType")
     }
 }
