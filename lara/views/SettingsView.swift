@@ -94,7 +94,7 @@ struct SettingsView: View {
                         }
                     
                     Toggle("Show File Manager in Tabs", isOn: $showfmintabs)
-                    Toggle("Enable Bete Features", isOn $betaFeaturesEnabled)
+                    Toggle("Enable Bete Features", isOn: $betaFeaturesEnabled)
                 } header: {
                     Text("Lara Settings")
                 } footer: {
