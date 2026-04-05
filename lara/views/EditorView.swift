@@ -11,7 +11,7 @@ struct EditorView: View {
     @ObservedObject private var mgr = laramgr.shared
     
     private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
-    private let modurl: URL
+    private let mgurl: URL
 
     @State private var mgXML: String = ""
     @State private var status: String?
@@ -20,7 +20,7 @@ struct EditorView: View {
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let orimg = docs.appendingPathComponent("OriginalMobileGestalt.plist")
+        mgurl = docs.appendingPathComponent("OriginalMobileGestalt.plist")
     }
 
     var body: some View {
@@ -48,9 +48,15 @@ struct EditorView: View {
                     HStack {
                         Text("Current SubType:")
                         Spacer()
-                        Text(currentSubType != -1 ? String(currentSubType.wrappedValue) : "Error")
-                            .font(.system(.body, design: .monospaced))
-                            .foregroundColor(.secondary)
+                        if currentSubType != -1 {
+                            Text(String(currentSubType))
+                                .font(.system(.body, design: .monospaced))
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("unknown")
+                                .font(.system(.body, design: .monospaced))
+                                .foregroundColor(.secondary)
+                        }
                     }
                     Button() {
                         // enable_dynisland()
@@ -75,9 +81,9 @@ struct EditorView: View {
         let fm = FileManager.default
         let sysURL = URL(fileURLWithPath: path)
 
-        if !fm.fileExists(atPath: modurl.path) {
+        if !fm.fileExists(atPath: mgurl.path) {
             do {
-                try fm.copyItem(at: sysURL, to: modurl)
+                try fm.copyItem(at: sysURL, to: mgurl)
             } catch {
                 status = "failed to copy plist: \(error.localizedDescription)"
                 return
@@ -85,12 +91,12 @@ struct EditorView: View {
         }
 
         do {
-            let data = try Data(contentsOf: modurl)
+            let data = try Data(contentsOf: mgurl)
             let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
             let xmlData = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
             mgXML = String(data: xmlData, encoding: .utf8) ?? "failed to encode XML"
 
-            currentSubType = getPlistIntValue(plistPath: orimg, key: "ArtworkDeviceSubType")
+            currentSubType = getPlistIntValue(plistPath: mgurl, key: "ArtworkDeviceSubType")
         } catch {
             status = "failed to load plist: \(error.localizedDescription)"
         }
