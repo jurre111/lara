@@ -56,14 +56,19 @@ struct EditorView: View {
                             .keyboardType(.numberPad)
                             .textFieldStyle(.roundedBorder)
                     }
+                    Button() {
+                        applySubType()
+                    } {
+                        Text("Replace SubType")
+                    }
                 } header: {
-                    Text("MobileGestalt")
+                    Text("ArtworkDeviceSubType")
                 }
                 Section {
                     Button() {
-                        enable_dynisland()
+                        apply_mg()
                     } label: {
-                        Text(customSubTypeEnabled ? "Override SubType" : "Enable Dynamic Island")
+                        Text("Apply")
                     }
                     Button() {
                         revert_mg()
@@ -73,6 +78,8 @@ struct EditorView: View {
                     }
                 } header: {
                     Text("Apply")
+                } footer: {
+                    Text("Note: you can use file manager to edit the modified plist to modify more keys.")
                 }
             }
             .navigationTitle("MobileGestalt")
@@ -170,8 +177,8 @@ struct EditorView: View {
             return false
         }
     }
-
-    private func enable_dynisland() {
+    
+    private func applySubType() {
         let fm = FileManager.default
         if !fm.fileExists(atPath: modmgurl.path) {
             do {
@@ -182,13 +189,19 @@ struct EditorView: View {
             }
         }
         setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: customSubType)
-        do {
-            let data = try Data(contentsOf: modmgurl)
-            try data.write(to: URL(fileURLWithPath: path), options: .atomic)
-            respringAlert = "enabled Dynamic Island, respring to see changes"
-        } catch {
-            status = "failed to replace original plist with modified: \(error.localizedDescription)"
-            return
+    }
+
+    private func apply_mg() {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: modmgurl.path) {
+            do {
+                let data = try Data(contentsOf: modmgurl)
+                try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+                respringAlert = "Applied modified mobilegestalt, respring to see changes"
+            } catch {
+                status = "failed to copy plist: \(error.localizedDescription)"
+                return
+            }
         }
     }
 
