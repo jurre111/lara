@@ -74,6 +74,7 @@ struct AllAppsView: View {
                                     Text("Unknown App")
                                         .font(.headline)
                                         .foregroundColor(.secondary)
+                                }
                                 Spacer()
                                 Text(app.bundleIdentifier)
                                     .font(.caption)
