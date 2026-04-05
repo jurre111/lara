@@ -117,87 +117,38 @@ struct SBApp: Identifiable {
     private func loadIcon() -> UIImage? {
         guard let bundle = Bundle(path: bundleURL.path) else { return nil }
         
-        // Get Assets.car and extract the app icon
-        let assetsCarPath = bundleURL.appendingPathComponent("Assets.car").path
-        let fm = FileManager.default
-        
-        if fm.fileExists(atPath: assetsCarPath) {
-            if let image = extractImageFromAssetsCar(path: assetsCarPath) {
+        // Try standard AppIcon names first (most common in Assets.car)
+        let standardNames = ["AppIcon", "AppIcon60x60", "icon", "Icon", "AppIcon-60"]
+        for name in standardNames {
+            if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
                 return image
             }
         }
         
-        return nil
-    }
-    
-    private func extractImageFromAssetsCar(path: String) -> UIImage? {
-        guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
-        
-        let bytes = [UInt8](data)
-        
-        // Search for PNG header (89 50 4E 47)
-        let pngHeader: [UInt8] = [0x89, 0x50, 0x4E, 0x47]
-        // Search for JPEG header (FF D8 FF)
-        let jpegHeader: [UInt8] = [0xFF, 0xD8, 0xFF]
-        
-        // Look for PNG
-        if let pngRange = findImageData(in: bytes, header: pngHeader, endMarker: [0x49, 0x45, 0x4E, 0x44]) {
-            if let image = UIImage(data: data.subdata(in: pngRange)) {
-                return image
-            }
-        }
-        
-        // Look for JPEG
-        if let jpegStart = findImageStart(in: bytes, header: jpegHeader) {
-            if let jpegEnd = findJPEGEnd(in: bytes, start: jpegStart) {
-                let jpegRange = jpegStart..<jpegEnd
-                if let image = UIImage(data: data.subdata(in: jpegRange)) {
+        // Try names from Info.plist CFBundleIcons
+        if let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
+           let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] {
+            if let iconName = primary["CFBundleIconName"] as? String {
+                if let image = UIImage(named: iconName, in: bundle, compatibleWith: nil) {
                     return image
+                }
+            }
+            if let files = primary["CFBundleIconFiles"] as? [String] {
+                for name in files {
+                    if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+                        return image
+                    }
                 }
             }
         }
         
-        return nil
-    }
-    
-    private func findImageStart(in bytes: [UInt8], header: [UInt8]) -> Int? {
-        guard !header.isEmpty else { return nil }
-        
-        for i in 0...(bytes.count - header.count) {
-            if bytes[i..<(i + header.count)].elementsEqual(header) {
-                return i
+        // Try CFBundleIconFile
+        if let name = bundle.infoDictionary?["CFBundleIconFile"] as? String {
+            if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+                return image
             }
         }
-        return nil
-    }
-    
-    private func findImageData(in bytes: [UInt8], header: [UInt8], endMarker: [UInt8]) -> Range<Int>? {
-        guard let start = findImageStart(in: bytes, header: header) else { return nil }
-        guard let endIndex = findImageEnd(in: bytes, start: start, endMarker: endMarker) else { return nil }
         
-        return start..<(endIndex + endMarker.count)
-    }
-    
-    private func findImageEnd(in bytes: [UInt8], start: Int, endMarker: [UInt8]) -> Int? {
-        guard !endMarker.isEmpty else { return nil }
-        
-        for i in start...(bytes.count - endMarker.count) {
-            if bytes[i..<(i + endMarker.count)].elementsEqual(endMarker) {
-                return i
-            }
-        }
-        return nil
-    }
-    
-    private func findJPEGEnd(in bytes: [UInt8], start: Int) -> Int? {
-        // JPEG ends with FF D9
-        let jpegEnd: [UInt8] = [0xFF, 0xD9]
-        
-        for i in start...(bytes.count - jpegEnd.count) {
-            if bytes[i..<(i + jpegEnd.count)].elementsEqual(jpegEnd) {
-                return i + jpegEnd.count
-            }
-        }
         return nil
     }
 }
