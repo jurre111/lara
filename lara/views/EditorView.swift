@@ -103,7 +103,7 @@ struct EditorView: View {
             }
         }
         do {
-            fm = FileManager.default
+            let fm = FileManager.default
             if fm.fileExists(atPath: modmgurl.path) {
                 currentSubType = getPlistIntValue(plistPath: modmgurl, key: "ArtworkDeviceSubType")
             } else {
