@@ -71,7 +71,7 @@ struct EditorView: View {
                         Text("Enable Dynamic Island")
                     }
                     Button() {
-                        // revert_mg()
+                        revert_mg()
                     } label: {
                         Text("Revert")
                             .foregroundColor(.red)
