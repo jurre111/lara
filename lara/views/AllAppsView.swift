@@ -40,7 +40,7 @@ struct AllAppsView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .top) {
+        NavigationStack {
             ScrollView {
                 if isLoadingApps {
                     HStack {
@@ -92,21 +92,15 @@ struct AllAppsView: View {
                     .padding()
                 }
             }
-            .padding(.top, 60)
-            
-            VStack {
-                SearchBar(text: $searchText)
-                Divider()
-            }
-            .background(Color(.systemBackground))
-        }
-        .navigationTitle("All Applications (\(allApps.count))")
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    loadAllApps()
-                } label: {
-                    Image(systemName: "arrow.clockwise")
+            .navigationTitle("All Applications (\(allApps.count))")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        loadAllApps()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
                 }
             }
         }
