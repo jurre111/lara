@@ -166,15 +166,10 @@ struct EditorView: View {
         
         // overwrite the plist
         let newData = try! PropertyListSerialization.data(fromPropertyList: newPlist, format: .binary, options: 0)
-        if newData.count == stringsData.count {
-            do {
-                try newData.write(to: plistPath)
-                return true
-            } catch {
-                return false
-            }
-        } else {
-            // too big
+        do {
+            try newData.write(to: plistPath)
+            return true
+        } catch {
             return false
         }
     }
