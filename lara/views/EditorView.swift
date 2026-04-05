@@ -176,7 +176,7 @@ struct EditorView: View {
 
     private func enable_dynisland() {
         let fm = FileManager.default
-        if fm.fileExists(atPath: mgurl.path) {
+        if !fm.fileExists(atPath: modmgurl.path) {
             do {
                 try fm.copyItem(at: mgurl, to: modmgurl)
             } catch {
