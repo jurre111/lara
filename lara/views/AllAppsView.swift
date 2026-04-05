@@ -11,7 +11,6 @@ struct AllAppsView: View {
     @State private var allApps: [SBApp] = []
     @State private var isLoadingApps = false
     @State private var searchText = ""
-    @State private var iconWidth = 60.0
     
     var filteredApps: [SBApp] {
         if searchText.isEmpty {
@@ -42,9 +41,6 @@ struct AllAppsView: View {
     
     var body: some View {
         List {
-            Slider(value: $iconWidth, in: 30...120, step: 1) {
-                Text("Icon Size")
-            }
             if isLoadingApps {
                 HStack {
                     Spacer()
@@ -61,12 +57,12 @@ struct AllAppsView: View {
                             if let icon = app.icon {
                                 Image(uiImage: icon)
                                     .resizable()
-                                    .frame(width: iconWidth, height: iconWidth)
-                                    .clipShape(RoundedRectangle(cornerRadius: iconWidth/2*0.4453125, style: .continuous))
+                                    .frame(width: 40, height: 40)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8.9, style: .continuous))
                             } else {
                                 Image(systemName: "app")
                                     .resizable()
-                                    .frame(width: iconWidth, height: iconWidth)
+                                    .frame(width: 40, height: 40)
                                     .foregroundColor(.gray)
                             }
                             
@@ -79,7 +75,7 @@ struct AllAppsView: View {
                                     .foregroundColor(.secondary)
                                     .lineLimit(1)
                             }
-                            .frame(height: iconWidth)
+                            .frame(height: 40)
                                 
                                 // HStack(spacing: 8) {
                                 //     if app.isSystem {

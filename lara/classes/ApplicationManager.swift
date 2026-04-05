@@ -114,25 +114,68 @@ struct SBApp: Identifiable {
     private func loadIcon() -> UIImage? {
         guard let bundle = Bundle(path: bundleURL.path) else { return nil }
         
-        // Try CFBundleIcons first
+        // Get current appearance (light/dark mode)
+        let traitCollection = UITraitCollection.current
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        
+        // Try CFBundleIcons from Assets.car first
         if let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
+           let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] {
+            
+            // Get icon name from plist
+            if let iconName = primary["CFBundleIconName"] as? String {
+                // Try loading from Assets.car with appearance
+                let appearanceVariant = isDarkMode ? "~dark" : ""
+                if let image = UIImage(named: iconName + appearanceVariant, in: bundle, compatibleWith: nil) {
+                    return image
+                }
+                // Fallback to base icon name
+                if let image = UIImage(named: iconName, in: bundle, compatibleWith: nil) {
+                    return image
+                }
+            }
+            
+            // Try CFBundleIconFiles from Assets.car
+            if let files = primary["CFBundleIconFiles"] as? [String] {
+                for name in files.reversed() {
+                    let appearanceVariant = isDarkMode ? "~dark" : ""
+                    if let image = UIImage(named: name + appearanceVariant, in: bundle, compatibleWith: nil) {
+                        return image
+                    }
+                    if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+                        return image
+                    }
+                }
+            }
+        }
+        
+        // Try CFBundleIconFile from Assets.car
+        if let name = bundle.infoDictionary?["CFBundleIconFile"] as? String {
+            let appearanceVariant = isDarkMode ? "~dark" : ""
+            if let image = UIImage(named: name + appearanceVariant, in: bundle, compatibleWith: nil) {
+                return image
+            }
+            if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
+                return image
+            }
+        }
+        
+        // Try CFBundleIcons~ipad as fallback
+        if let icons = bundle.infoDictionary?["CFBundleIcons~ipad"] as? [String: Any],
            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
            let files = primary["CFBundleIconFiles"] as? [String] {
             for name in files.reversed() {
+                let appearanceVariant = isDarkMode ? "~dark" : ""
+                if let image = UIImage(named: name + appearanceVariant, in: bundle, compatibleWith: nil) {
+                    return image
+                }
                 if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
                     return image
                 }
             }
         }
         
-        // Try CFBundleIconFile
-        if let name = bundle.infoDictionary?["CFBundleIconFile"] as? String {
-            if let image = UIImage(named: name, in: bundle, compatibleWith: nil) {
-                return image
-            }
-        }
-        
-        // Load PNG icon directly from pngIconPaths
+        // Load PNG icon directly from pngIconPaths as last resort
         for iconPath in pngIconPaths {
             let fullPath = bundleURL.appendingPathComponent(iconPath).path
             if FileManager.default.fileExists(atPath: fullPath) {
