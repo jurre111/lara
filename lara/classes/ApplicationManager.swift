@@ -115,22 +115,13 @@ struct SBApp: Identifiable {
     }
     
     private func loadIcon() -> UIImage? {
-        guard let bundle = Bundle(path: bundleURL.path) else {
-            globallogger.log("[Icon] Failed to load bundle for \(name)")
-            return nil
-        }
+        guard let bundle = Bundle(path: bundleURL.path) else { return nil }
         
-        globallogger.log("[Icon] Loading: \(name)")
-        
-        // Check if Assets.car exists
-        let assetsCarPath = bundleURL.appendingPathComponent("Assets.car").path
-        let hasAssetsCar = FileManager.default.fileExists(atPath: assetsCarPath)
-        
-        // Try standard AppIcon names first
+        // Try standard AppIcon names
         let standardNames = ["AppIcon", "AppIcon60x60", "AppIcon180", "AppIcon152", "AppIcon144", "AppIcon120"]
         for name in standardNames {
             if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
-                globallogger.log("[Icon] ✓ \(self.name): loaded \(name)")
+                globallogger.log("[Icon] ✓ \(self.name): \(name)")
                 return image
             }
         }
@@ -140,87 +131,122 @@ struct SBApp: Identifiable {
            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any] {
             if let iconName = primary["CFBundleIconName"] as? String {
                 if let image = UIImage(named: iconName, in: bundle, compatibleWith: UITraitCollection.current) {
-                    globallogger.log("[Icon] ✓ \(self.name): loaded CFBundleIconName \(iconName)")
+                    globallogger.log("[Icon] ✓ \(self.name): CFBundleIconName")
                     return image
                 }
             }
             if let files = primary["CFBundleIconFiles"] as? [String] {
                 for name in files {
                     if let image = UIImage(named: name, in: bundle, compatibleWith: UITraitCollection.current) {
-                        globallogger.log("[Icon] ✓ \(self.name): loaded CFBundleIconFiles \(name)")
+                        globallogger.log("[Icon] ✓ \(self.name): CFBundleIconFiles")
                         return image
                     }
                 }
             }
         }
         
-        // If Assets.car exists and UIImage failed, parse it directly
-        if hasAssetsCar {
-            globallogger.log("[Icon] Parsing Assets.car directly for \(self.name)")
-            if let image = extractIconFromAssetsCar(assetsCarPath) {
-                globallogger.log("[Icon] ✓ \(self.name): extracted from Assets.car")
-                return image
+        // Try Assets.car parsing for common icon names
+        let assetsCarPath = bundleURL.appendingPathComponent("Assets.car").path
+        if FileManager.default.fileExists(atPath: assetsCarPath) {
+            for iconName in standardNames {
+                if let image = extractIconFromAssetsCar(at: assetsCarPath, iconName: iconName) {
+                    globallogger.log("[Icon] ✓ \(self.name): extracted \(iconName) from Assets.car")
+                    return image
+                }
             }
         }
         
-        // Final fallback: PNG files
+        // PNG fallback
         for iconPath in pngIconPaths {
             let fullPath = bundleURL.appendingPathComponent(iconPath).path
             if FileManager.default.fileExists(atPath: fullPath),
                let image = UIImage(contentsOfFile: fullPath) {
-                globallogger.log("[Icon] ✓ \(self.name): loaded PNG")
+                globallogger.log("[Icon] ✓ \(self.name): PNG")
                 return image
             }
         }
         
-        globallogger.log("[Icon] ✗ \(self.name): no icon found")
         return nil
     }
     
-    private func extractIconFromAssetsCar(_ path: String) -> UIImage? {
+    private func extractIconFromAssetsCar(at path: String, iconName: String) -> UIImage? {
         guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
         
         let bytes = [UInt8](data)
         
-        // Search for PNG headers (89 50 4E 47)
-        if let pngRange = findImageRange(in: bytes, headerPrefix: [0x89, 0x50, 0x4E, 0x47], headerSuffix: [0x49, 0x45, 0x4E, 0x44]) {
-            if let image = UIImage(data: data.subdata(in: pngRange)) {
-                return image
-            }
+        // Assets.car format: Look for PNG/JPEG data in the file
+        // Start with a simple approach: find the first large PNG or JPEG
+        
+        // Search for PNG (89 50 4E 47)
+        if let image = findAndCreateImage(in: bytes, 
+                                          headerBytes: [0x89, 0x50, 0x4E, 0x47],
+                                          endBytes: [0x49, 0x45, 0x4E, 0x44],
+                                          data: data) {
+            return image
         }
         
-        // Search for JPEG headers (FF D8 FF)
-        if let jpegRange = findJPEGRange(in: bytes) {
-            if let image = UIImage(data: data.subdata(in: jpegRange)) {
-                return image
-            }
+        // Search for JPEG (FF D8 FF E0 or FF D8 FF E1, etc.)
+        if let image = findAndCreateJPEGImage(in: bytes, data: data) {
+            return image
         }
         
         return nil
     }
     
-    private func findImageRange(in bytes: [UInt8], headerPrefix: [UInt8], headerSuffix: [UInt8]) -> Range<Int>? {
-        guard let start = findPattern(in: bytes, pattern: headerPrefix) else { return nil }
-        guard let end = findPattern(in: bytes, pattern: headerSuffix, startIndex: start) else { return nil }
+    private func findAndCreateImage(in bytes: [UInt8], 
+                                     headerBytes: [UInt8], 
+                                     endBytes: [UInt8], 
+                                     data: Data) -> UIImage? {
+        var currentIndex = 0
         
-        return start..<(end + headerSuffix.count)
-    }
-    
-    private func findJPEGRange(in bytes: [UInt8]) -> Range<Int>? {
-        guard let start = findPattern(in: bytes, pattern: [0xFF, 0xD8, 0xFF]) else { return nil }
-        guard let end = findPattern(in: bytes, pattern: [0xFF, 0xD9], startIndex: start) else { return nil }
-        
-        return start..<(end + 2)
-    }
-    
-    private func findPattern(in bytes: [UInt8], pattern: [UInt8], startIndex: Int = 0) -> Int? {
-        guard pattern.count <= bytes.count - startIndex else { return nil }
-        
-        for i in startIndex...(bytes.count - pattern.count) {
-            if bytes[i..<(i + pattern.count)].elementsEqual(pattern) {
-                return i
+        while currentIndex < bytes.count - headerBytes.count {
+            // Find header
+            if bytes[currentIndex..<(currentIndex + headerBytes.count)].elementsEqual(headerBytes) {
+                // Found header, now find end
+                var endIndex = currentIndex + 100
+                while endIndex < bytes.count - endBytes.count {
+                    if bytes[endIndex..<(endIndex + endBytes.count)].elementsEqual(endBytes) {
+                        // Found end, extract image
+                        let imageData = data.subdata(in: currentIndex..<(endIndex + endBytes.count))
+                        if let image = UIImage(data: imageData) {
+                            return image
+                        }
+                        endIndex += 100
+                    } else {
+                        endIndex += 1
+                    }
+                }
             }
+            currentIndex += 1
         }
+        
+        return nil
+    }
+    
+    private func findAndCreateJPEGImage(in bytes: [UInt8], data: Data) -> UIImage? {
+        var currentIndex = 0
+        
+        while currentIndex < bytes.count - 3 {
+            // Look for JPEG start (FF D8 FF)
+            if bytes[currentIndex] == 0xFF && bytes[currentIndex + 1] == 0xD8 && bytes[currentIndex + 2] == 0xFF {
+                // Found start, look for end (FF D9)
+                var endIndex = currentIndex + 100
+                while endIndex < bytes.count - 1 {
+                    if bytes[endIndex] == 0xFF && bytes[endIndex + 1] == 0xD9 {
+                        // Found end
+                        let imageData = data.subdata(in: currentIndex..<(endIndex + 2))
+                        if let image = UIImage(data: imageData) {
+                            return image
+                        }
+                        endIndex += 100
+                    } else {
+                        endIndex += 1
+                    }
+                }
+            }
+            currentIndex += 1
+        }
+        
         return nil
     }
 }
