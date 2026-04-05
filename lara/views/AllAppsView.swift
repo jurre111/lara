@@ -57,12 +57,12 @@ struct AllAppsView: View {
                             if let icon = app.icon {
                                 Image(uiImage: icon)
                                     .resizable()
-                                    .frame(width: 40, height: 40)
+                                    .frame(width: 60, height: 60)
                                     .clipShape(RoundedRectangle(cornerRadius: 8.9, style: .continuous))
                             } else {
                                 Image(systemName: "app")
                                     .resizable()
-                                    .frame(width: 40, height: 40)
+                                    .frame(width: 60, height: 60)
                                     .foregroundColor(.gray)
                             }
                             
@@ -75,7 +75,7 @@ struct AllAppsView: View {
                                     .foregroundColor(.secondary)
                                     .lineLimit(1)
                             }
-                            .frame(height: 40)
+                            .frame(height: 60)
                                 
                                 // HStack(spacing: 8) {
                                 //     if app.isSystem {
