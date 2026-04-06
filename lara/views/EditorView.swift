@@ -82,13 +82,22 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    Picker("Gestures / Dynamic Island", selection: $currentSubType) {
-                        Text("Original (\(String(originalSubType)))").tag(originalSubType)
-                        ForEach(SubType.allCases) { subtype in
-                            Text(subtype.displayName).tag(subtype.rawValue)
+                    HStack {
+                        Text("Gestures /\nDynamic Island")
+                        Spacer()
+                        NavigationLink {
+                            Picker("Select", selection: $currentSubType) {
+                                Text("Original (\(String(originalSubType)))").tag(originalSubType)
+                                ForEach(SubType.allCases) { subtype in
+                                    Text(subtype.displayName).tag(subtype.rawValue)
+                                }
+                            }
+                            .pickerStyle(.inline)
+                        } label: {
+                            Text(String(currentSubType))
+                                .foregroundColor(.blue)
                         }
                     }
-                    .pickerStyle(.navigationLink)
                     ForEach(tweaks.indices, id: \.self) { index in
                         Toggle(tweaks[index].name, isOn: $tweaks[index].enabled)
                     }
