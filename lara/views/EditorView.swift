@@ -10,8 +10,7 @@ import SwiftUI
 struct EditorView: View {
     @ObservedObject private var mgr = laramgr.shared
     
-    // private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
-    private let path = "/var/mobile/Documents/OriginalMobileGestalt.plist"
+    private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let mgurl: URL
     private let modmgurl: URL
 
