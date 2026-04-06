@@ -14,61 +14,123 @@ struct EditorView: View {
     private let mgurl: URL
     private let modmgurl: URL
 
+    class Tweak {
+        var enabled: Bool = false
+        let name: String
+        let mods: [TweakMod]
+
+        init(name: String, mods: [TweakMod]) {
+            self.name = name
+            self.mods = mods
+        }
+    }
+    class TweakMod {
+        let key: String
+        let value: Int
+        
+        init(key: String, value: Int = 1) {
+            self.key = key
+            self.value = value
+        }
+    }
+
     @State private var mgXML: String = ""
     @State private var status: String?
     @State private var respringAlert: String?
     @State private var customSubType: Int = 2796
     @State private var customSubTypeEnabled: Bool = false
-    @AppStorage("currentSubType") private var currentSubType: Int = -1
-    @AppStorage("AODEnabled") private var AODEnabled: Bool = false
+    @State private var currentSubType: Int = -1
+    @State private var originalSubType: Int = -1
+    enum SubType: Int, CaseIterable, Identifiable {
+        case iPhone14Pro = 2556
+        case iPhone14ProMax = 2796
+        case iPhone16Pro = 2622
+        case iPhone16ProMax = 2868
+
+        var id: Int { self.rawValue }
+        var displayName: String {
+            switch self {
+            case .iPhone14Pro: return "iPhone 14 Pro Dynamic Island (2556)"
+            case .iPhone14ProMax: return "iPhone 14 Pro Max Dynamic Island (2796)"
+            case .iPhone16Pro: return "iPhone 16 Pro Dynamic Island (2622)"
+            case .iPhone16ProMax: return "iPhone 16 Pro Max Dynamic Island (2868)"
+            }
+        }
+    }
+
+    @State private var tweaks = [
+        Tweak(name: "AOD", mods: [TweakMod(key: "2OOJf1VhaM7NxfRok3HbWQ"), TweakMod(key: "j8/Omm6s1lsmTDFsXjsBfA")]),
+        Tweak(name: "Action Button", mods: [TweakMod(key: "cT44WE1EohiwRzhsZ8xEsw")])
+    ]
     
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         mgurl = docs.appendingPathComponent("OriginalMobileGestalt.plist")
         modmgurl = docs.appendingPathComponent("ModifiedMobileGestalt.plist")
-        AODEnabled = getPlistIntValue(plistPath: URL(fileURLWithPath: path), key: "2OOJf1VhaM7NxfRok3HbWQ") != 0
     }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    Toggle("Enable AOD", isOn: $AODEnabled)
-                    Button() {
-                        applyAOD()
-                    } label: {
-                        Text("Apply")
-                    }
-                } header: {
-                    Text("AOD")
-                }
-                Section {
-                    HStack {
-                        Text("Current SubType:")
-                        Spacer()
-                        if currentSubType != -1 {
-                            Text(String(currentSubType))
-                        }
-                        Button {
-                            load()
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
+                    Picker("Gestures / Dynamic Island", selection: $currentSubType) {
+                        Text("Original (\(originalSubType))").tag(originalSubType)
+                        ForEach(SubType.allCases) { subtype in
+                            Text(subtype.displayName).tag(subtype.rawValue)
                         }
                     }
-                    Toggle("Custom SubType (risky)", isOn: $customSubTypeEnabled)
-                    if customSubTypeEnabled {
-                        TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
-                            .keyboardType(.numberPad)
+                    .pickerStyle(.menu)
+                    ForEach(tweaks, id: \.name) { tweak in
+                        Toggle(tweak.name, isOn: $tweak.enabled)
                     }
                     Button() {
-                        applySubType()
+                        for tweak in tweaks {
+                            applyMgTweak(mods: tweak.mods)
+                        }
                     } label: {
-                        Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
+                        Text("Apply Tweaks")
                     }
                 } header: {
-                    Text("ArtworkDeviceSubType")
+                    Text("Tweaks")
                 }
+
+                // Section {
+                //     Toggle("Enable AOD", isOn: $AODEnabled)
+                //     Button() {
+                //         applyAOD()
+                //     } label: {
+                //         Text("Apply")
+                //     }
+                // } header: {
+                //     Text("AOD")
+                // }
+                // Section {
+                //     HStack {
+                //         Text("Current SubType:")
+                //         Spacer()
+                //         if currentSubType != -1 {
+                //             Text(String(currentSubType))
+                //         }
+                //         Button {
+                //             load()
+                //         } label: {
+                //             Image(systemName: "arrow.clockwise")
+                //         }
+                //     }
+                //     Toggle("Custom SubType (risky)", isOn: $customSubTypeEnabled)
+                //     if customSubTypeEnabled {
+                //         TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
+                //             .keyboardType(.numberPad)
+                //     }
+                //     Button() {
+                //         applySubType()
+                //     } label: {
+                //         Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
+                //     }
+                // } header: {
+                //     Text("ArtworkDeviceSubType")
+                // }
                 
                 
                 Section {
@@ -117,7 +179,13 @@ struct EditorView: View {
                 return
             }
         }
+        for tweak in tweaks {
+            if getPlistIntValue(plistPath: sysURL, key: tweak.mods[0].key) == tweak.mods[0].value {
+                tweak.enabled = true
+            }
+        }
         currentSubType = getPlistIntValue(plistPath: sysURL, key: "ArtworkDeviceSubType")
+        originalSubType = getPlistIntValue(plistPath: mgurl, key: "ArtworkDeviceSubType")
     }
     // copied from Cowabunga
     private func getPlistIntValue(plistPath: URL, key: String) -> Int {
@@ -179,6 +247,21 @@ struct EditorView: View {
             return false
         }
     }
+
+    private func applyMgTweak(mods: [TweakMod]) {
+        let fm = FileManager.default
+        if !fm.fileExists(atPath: modmgurl.path) {
+            do {
+                try fm.copyItem(at: mgurl, to: modmgurl)
+            } catch {
+                status = "failed to copy plist: \(error.localizedDescription)"
+                return
+            }
+        }
+        for mod in mods {
+            setPlistValueInt(plistPath: modmgurl, key: mod.key, value: mod.value)
+        }
+    }
     
     private func applySubType() {
         let fm = FileManager.default
@@ -193,19 +276,19 @@ struct EditorView: View {
         setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: customSubType)
     }
 
-    private func applyAOD() {
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: modmgurl.path) {
-            do {
-                try fm.copyItem(at: mgurl, to: modmgurl)
-            } catch {
-                status = "failed to copy plist: \(error.localizedDescription)"
-                return
-            }
-        }
-        setPlistValueInt(plistPath: modmgurl, key: "2OOJf1VhaM7NxfRok3HbWQ", value: AODEnabled ? 1 : 0)
-        setPlistValueInt(plistPath: modmgurl, key: "j8/Omm6s1lsmTDFsXjsBfA", value: AODEnabled ? 1 : 0)
-    }
+    // private func applyAOD() {
+    //     let fm = FileManager.default
+    //     if !fm.fileExists(atPath: modmgurl.path) {
+    //         do {
+    //             try fm.copyItem(at: mgurl, to: modmgurl)
+    //         } catch {
+    //             status = "failed to copy plist: \(error.localizedDescription)"
+    //             return
+    //         }
+    //     }
+    //     setPlistValueInt(plistPath: modmgurl, key: "2OOJf1VhaM7NxfRok3HbWQ", value: AODEnabled ? 1 : 0)
+    //     setPlistValueInt(plistPath: modmgurl, key: "j8/Omm6s1lsmTDFsXjsBfA", value: AODEnabled ? 1 : 0)
+    // }
 
     private func apply_mg() {
         let fm = FileManager.default
