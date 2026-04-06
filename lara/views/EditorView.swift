@@ -260,7 +260,7 @@ struct EditorView: View {
             }
         }
         for mod in tweak.mods {
-            setPlistValueInt(plistPath: modmgurl, key: mod.key, value: tweak.enabled ? mod.value : Int(!(mod.value != 0)))
+            setPlistValueInt(plistPath: modmgurl, key: mod.key, value: tweak.enabled ? mod.value : 1-mod.value)
         }
     }
     
