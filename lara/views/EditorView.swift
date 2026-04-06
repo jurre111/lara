@@ -80,7 +80,7 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    Picker("Gestures / Dynamic Island", selection: $currentSubType) {
+                    Picker("Gestures /\nDynamic Island", selection: $currentSubType) {
                         Text("Original (\(String(originalSubType)))").tag(originalSubType)
                         ForEach(SubType.allCases) { subtype in
                             Text(subtype.displayName).tag(subtype.rawValue)
