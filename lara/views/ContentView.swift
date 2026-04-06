@@ -323,7 +323,7 @@ struct ContentView: View {
                                     ZeroView(mgr: mgr)
                                 }
                                 
-                                if 1 == 2 {
+                                if betaFeaturesEnabled {
                                     NavigationLink("MobileGestalt") {
                                         EditorView()
                                     }
