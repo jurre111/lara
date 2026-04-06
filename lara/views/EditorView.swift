@@ -1,5 +1,5 @@
 //
-//  FontPicker.swift
+//  EditorView.swift
 //  lara
 //
 //  Created by ruter on 27.03.26.
@@ -10,7 +10,8 @@ import SwiftUI
 struct EditorView: View {
     @ObservedObject private var mgr = laramgr.shared
     
-    private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+    // private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+    private let path = "/var/mobile/Documents/OriginalMobileGestalt.plist"
     private let mgurl: URL
     private let modmgurl: URL
 
@@ -84,58 +85,15 @@ struct EditorView: View {
                     ForEach(tweaks.indices, id: \.self) { index in
                         Toggle(tweaks[index].name, isOn: $tweaks[index].enabled)
                     }
+                } header: {
+                    Text("Tweaks")
+                }
+                Section {
                     Button() {
                         for tweak in tweaks {
                             applyMgTweak(tweak: tweak)
                         }
                         applySubType()
-                    } label: {
-                        Text("Apply Tweaks")
-                    }
-                } header: {
-                    Text("Tweaks")
-                }
-
-                // Section {
-                //     Toggle("Enable AOD", isOn: $AODEnabled)
-                //     Button() {
-                //         applyAOD()
-                //     } label: {
-                //         Text("Apply")
-                //     }
-                // } header: {
-                //     Text("AOD")
-                // }
-                // Section {
-                //     HStack {
-                //         Text("Current SubType:")
-                //         Spacer()
-                //         if currentSubType != -1 {
-                //             Text(String(currentSubType))
-                //         }
-                //         Button {
-                //             load()
-                //         } label: {
-                //             Image(systemName: "arrow.clockwise")
-                //         }
-                //     }
-                //     Toggle("Custom SubType (risky)", isOn: $customSubTypeEnabled)
-                //     if customSubTypeEnabled {
-                //         TextField("SubType eg. 2796", value: $customSubType, formatter: NumberFormatter())
-                //             .keyboardType(.numberPad)
-                //     }
-                //     Button() {
-                //         applySubType()
-                //     } label: {
-                //         Text(customSubTypeEnabled ? "Replace SubType" : "Enable Dynamic Island")
-                //     }
-                // } header: {
-                //     Text("ArtworkDeviceSubType")
-                // }
-                
-                
-                Section {
-                    Button() {
                         apply_mg()
                     } label: {
                         Text("Apply Modified MobileGestalt")
@@ -177,6 +135,14 @@ struct EditorView: View {
                 try fm.copyItem(at: sysURL, to: mgurl)
             } catch {
                 status = "failed to copy plist: \(error.localizedDescription)"
+                return
+            }
+        }
+        if fm.fileExists(atPath: modmgurl.path) {
+            do {
+                try fm.removeItem(at: modmgurl)
+            } catch {
+                status = "failed to remove old modified plist: \(error.localizedDescription)"
                 return
             }
         }
@@ -296,12 +262,21 @@ struct EditorView: View {
         if fm.fileExists(atPath: modmgurl.path) {
             do {
                 let data = try Data(contentsOf: modmgurl)
-                try data.write(to: URL(fileURLWithPath: path), options: .atomic)
-                respringAlert = "Applied modified mobilegestalt, respring to see changes"
+                if data == try Data(contentsOf: mgurl) {
+                    status = "No changes to apply"
+                } else {
+                    try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+                    mgr.logmsg("wrote \(data.count) bytes to \(path)")
+                    respringAlert = "Applied modified mobilegestalt, respring to see changes"
+                }
+                return
             } catch {
                 status = "failed to copy plist: \(error.localizedDescription)"
                 return
             }
+        } else {    
+            status = "\(String(modmgurl)) was not found, nothing to apply"
+            return
         }
     }
 
@@ -314,9 +289,11 @@ struct EditorView: View {
                 mgr.logmsg("reverted MobileGestalt plist")
                 respringAlert = "Reverted MobileGestalt plist, respring to see changes"
             } catch {
-                status = "failed to replace modified plist with original: \(error.localizedDescription)"
+                status = "Failed to replace modified plist with original: \(error.localizedDescription)"
                 return
             }
+        } else {
+            status = "Failed to revert mobilegestalt: \(String(mgurl)) was not found"
         }
     }
 }
