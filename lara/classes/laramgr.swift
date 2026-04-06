@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import Darwin
 import notify
 
 final class laramgr: ObservableObject {
@@ -291,6 +292,76 @@ final class laramgr: ObservableObject {
         let ok = vfsoverwritefromlocalpath(target: target, source: tmp)
         try? FileManager.default.removeItem(atPath: tmp)
         return ok
+    }
+    
+    private func sbxoverwrite(path: String, data: Data) -> (ok: Bool, message: String) {
+        let fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0o644)
+        if fd == -1 {
+            return (false, "sbx open failed: errno=\(errno) \(String(cString: strerror(errno)))")
+        }
+        defer { close(fd) }
+
+        var total = 0
+        let wroteAll = data.withUnsafeBytes { ptr -> Bool in
+            guard let base = ptr.baseAddress else { return ptr.count == 0 }
+            while total < ptr.count {
+                let n = write(fd, base.advanced(by: total), ptr.count - total)
+                if n <= 0 { return false }
+                total += n
+            }
+            return true
+        }
+
+        if !wroteAll {
+            return (false, "sbx write failed: errno=\(errno) \(String(cString: strerror(errno)))")
+        }
+
+        return (true, "ok (\(total) bytes)")
+    }
+
+    @discardableResult
+    func lara_overwritefile(target: String, source: String) -> (ok: Bool, message: String) {
+        guard FileManager.default.fileExists(atPath: source) else {
+            return (false, "source file not found: \(source)")
+        }
+
+        let result: (ok: Bool, message: String)
+        if sbxready {
+            do {
+                let data = try Data(contentsOf: URL(fileURLWithPath: source))
+                result = sbxoverwrite(path: target, data: data)
+            } catch {
+                result = (false, "sbx read source failed: \(error.localizedDescription)")
+            }
+        } else {
+            result = (false, "sbx not ready")
+        }
+
+        if result.ok {
+            return result
+        }
+
+        guard vfsready else {
+            return (false, result.message + " | vfs not ready")
+        }
+
+        let ok = vfsoverwritefromlocalpath(target: target, source: source)
+        return ok ? (true, "ok (vfs overwrite)") : (false, result.message + " | vfs overwrite failed")
+    }
+
+    @discardableResult
+    func lara_overwritefile(target: String, data: Data) -> (ok: Bool, message: String) {
+        let result = sbxready ? sbxoverwrite(path: target, data: data) : (false, "sbx not ready")
+        if result.0 {
+            return result
+        }
+
+        guard vfsready else {
+            return (false, result.1 + ", vfs not ready")
+        }
+
+        let ok = vfsoverwritewithdata(target: target, data: data)
+        return ok ? (true, "vfs overwrite ok") : (false, result.1 + ", vfs overwrite failed")
     }
     
     func vfszeropage(at path: String) -> Bool {

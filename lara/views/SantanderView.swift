@@ -24,7 +24,7 @@ struct SantanderView: View {
     var body: some View {
         let readUsesSBX = (selectedmethod != .vfs)
         let writeUsesVFS = (selectedmethod != .sbx)
-        let ready = (selectedmethod == .vfs) ? mgr.vfsready : mgr.sbxready
+        let ready = mgr.vfsready && mgr.sbxready
         Group {
             if ready {
                 SantanderBrowserSheet(startPath: startPath, readUsesSBX: readUsesSBX, writeUsesVFS: writeUsesVFS)
@@ -33,9 +33,11 @@ struct SantanderView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "externaldrive")
                         .font(.system(size: 36, weight: .semibold))
-                    Text(selectedmethod == .vfs ? "VFS not ready" : "Sandbox escape not ready")
+                    
+                    Text("File Manager not ready")
                         .font(.headline)
-                    Text(selectedmethod == .vfs ? "Run exploit and VFS init first." : "Run exploit and SBX escape first.")
+                    
+                    Text("1. Switch to hybrid mode in settings \n2. Escape the Sandbox \n3. Initialise VFS\n4. Try again.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -44,11 +46,9 @@ struct SantanderView: View {
         }
         .onAppear {
             refreshSelectedMethod()
-            startIfNeeded()
         }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
             refreshSelectedMethod()
-            startIfNeeded()
         }
     }
 }
@@ -58,38 +58,6 @@ private extension SantanderView {
         if let raw = UserDefaults.standard.string(forKey: "selectedmethod"),
            let m = method(rawValue: raw) {
             selectedmethod = m
-        }
-    }
-
-    func startIfNeeded() {
-        if !mgr.dsready && !mgr.dsrunning {
-            mgr.run { ok in
-                if ok {
-                    startMethodOps()
-                }
-            }
-        } else {
-            startMethodOps()
-        }
-    }
-
-    func startMethodOps() {
-        switch selectedmethod {
-        case .sbx:
-            if !mgr.sbxready && !mgr.sbxrunning {
-                mgr.sbxescape()
-            }
-        case .vfs:
-            if !mgr.vfsready && !mgr.vfsrunning {
-                mgr.vfsinit()
-            }
-        case .hybrid:
-            if !mgr.sbxready && !mgr.sbxrunning {
-                mgr.sbxescape()
-            }
-            if !mgr.vfsready && !mgr.vfsrunning {
-                mgr.vfsinit()
-            }
         }
     }
 }

@@ -61,6 +61,7 @@ struct SettingsView: View {
                     Text("Lara")
                 }
                 
+                
                 Section {
                     Picker("", selection: $selectedmethod) {
                         ForEach(method.allCases, id: \.self) { method in
@@ -76,7 +77,7 @@ struct SettingsView: View {
                     } else if selectedmethod == .sbx {
                         Text("SBX only.")
                     } else {
-                        Text("Hybrid: SBX for read/list, VFS for overwrite/edit.")
+                        Text("Hybrid: SBX for read, VFS for write.\nBest method ever. (Thanks Huy)")
                     }
                 }
                 

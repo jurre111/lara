@@ -57,22 +57,18 @@ struct lara: App {
     var body: some Scene {
         WindowGroup {
             TabView(selection: $selectedtab) {
-                let fmReady = (selectedmethod == .vfs && mgr.vfsready) || (selectedmethod == .sbx && mgr.sbxready) || (selectedmethod == .hybrid && (mgr.vfsready || mgr.sbxready))
-
-                if fmReady && showfmintabs {
-                    SantanderView(startPath: "/")
-                        .tabItem {
-                            Image(systemName: "folder.fill")
-                        }
-                        .tag(0)
-                }
-
+                SantanderView(startPath: "/")
+                    .tabItem {
+                        Image(systemName: "folder.fill")
+                    }
+                    .tag(0)
+                
                 ContentView()
                     .tabItem {
                         Image(systemName: "ant.fill")
                     }
                     .tag(1)
-
+                
                 LogsView(logger: globallogger)
                     .tabItem {
                         Image(systemName: "doc.text.fill")
