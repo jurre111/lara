@@ -80,13 +80,17 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    Picker("Gestures /\nDynamic Island", selection: $currentSubType) {
-                        Text("Original (\(String(originalSubType)))").tag(originalSubType)
-                        ForEach(SubType.allCases) { subtype in
-                            Text(subtype.displayName).tag(subtype.rawValue)
+                    HStack {
+                        Text("Gestures /\nDynamic Island")
+                        Spacer()
+                        Picker("", selection: $currentSubType) {
+                            Text("Original (\(String(originalSubType)))").tag(originalSubType)
+                            ForEach(SubType.allCases) { subtype in
+                                Text(subtype.displayName).tag(subtype.rawValue)
+                            }
                         }
+                        .pickerStyle(.menu)
                     }
-                    .pickerStyle(.menu)
                     ForEach(tweaks.indices, id: \.self) { index in
                         Toggle(tweaks[index].name, isOn: $tweaks[index].enabled)
                     }
