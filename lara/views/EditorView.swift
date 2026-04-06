@@ -82,7 +82,7 @@ struct EditorView: View {
                     }
                     .pickerStyle(.menu)
                     ForEach(tweaks, id: \.name) { tweak in
-                        Toggle(tweak.name, isOn: $tweak.enabled)
+                        Toggle(tweak.name, isOn: .constant(tweak.enabled))
                     }
                     Button() {
                         for tweak in tweaks {
