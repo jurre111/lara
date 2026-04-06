@@ -51,17 +51,24 @@ struct EditorView: View {
         var id: Int { self.rawValue }
         var displayName: String {
             switch self {
-            case .iPhone14Pro: return "iPhone 14 Pro Dynamic Island (2556)"
-            case .iPhone14ProMax: return "iPhone 14 Pro Max Dynamic Island (2796)"
-            case .iPhone16Pro: return "iPhone 16 Pro Dynamic Island (2622)"
-            case .iPhone16ProMax: return "iPhone 16 Pro Max Dynamic Island (2868)"
+            case .iPhone14Pro: return "iPhone 14 Pro (2556)"
+            case .iPhone14ProMax: return "iPhone 14 Pro Max (2796)"
+            case .iPhone16Pro: return "iPhone 16 Pro (2622) iOS 18+"
+            case .iPhone16ProMax: return "iPhone 16 Pro Max (2868) iOS 18+"
             }
         }
     }
 
     @State private var tweaks = [
+        Tweak(name: "Action Button", mods: [TweakMod(key: "cT44WE1EohiwRzhsZ8xEsw")]),
+        Tweak(name: "Boot Chime", mods: [TweakMod(key: "QHxt+hGLaBPbQJbXiUJX3w")]),
+        Tweak(name: "Charge Limit", mods: [TweakMod(key: "37NVydb//GP/GrhuTN+exg")]),
+        Tweak(name: "Collision SOS", mods: [TweakMod(key: "HCzWusHQwZDea6nNhaKndw")]),
         Tweak(name: "AOD", mods: [TweakMod(key: "2OOJf1VhaM7NxfRok3HbWQ"), TweakMod(key: "j8/Omm6s1lsmTDFsXjsBfA")]),
-        Tweak(name: "Action Button", mods: [TweakMod(key: "cT44WE1EohiwRzhsZ8xEsw")])
+        Tweak(name: "AOD Vibrancy", mods: [TweakMod(key: "ykpu7qyhqFweVMKtxNylWA")]),
+        Tweak(name: "Apple Pencil", mods: [TweakMod(key: "yhHcB0iH0d1XzPO/CFd3ow")]),
+        Tweak(name: "Camera Button (iOS 18+)", mods: [TweakMod(key: "CwvKxM2cEogD3p+HYgaW0Q"), TweakMod(key: "oOV1jhJbdV3AddkcCg0AEA")])
+        
     ]
     
 
@@ -81,12 +88,15 @@ struct EditorView: View {
                             Text(subtype.displayName).tag(subtype.rawValue)
                         }
                     }
-                    .pickerStyle(.menu)
+                    .pickerStyle(.navigationLink)
                     ForEach(tweaks.indices, id: \.self) { index in
                         Toggle(tweaks[index].name, isOn: $tweaks[index].enabled)
                     }
                 } header: {
                     Text("Tweaks")
+                } footer: {
+                    Text("Note: some tweaks may not work or cause instability.")
+                    Text("WARNING: Never enable features your device doesn't support.")
                 }
                 Section {
                     Button() {
