@@ -86,7 +86,7 @@ struct EditorView: View {
                     }
                     Button() {
                         for tweak in tweaks {
-                            applyMgTweak(mods: tweak.mods)
+                            applyMgTweak(tweak: tweak)
                         }
                         applySubType()
                     } label: {
@@ -249,7 +249,7 @@ struct EditorView: View {
         }
     }
 
-    private func applyMgTweak(mods: [TweakMod]) {
+    private func applyMgTweak(tweak: Tweak) {
         let fm = FileManager.default
         if !fm.fileExists(atPath: modmgurl.path) {
             do {
@@ -259,8 +259,8 @@ struct EditorView: View {
                 return
             }
         }
-        for mod in mods {
-            setPlistValueInt(plistPath: modmgurl, key: mod.key, value: mod.value)
+        for mod in tweak.mods {
+            setPlistValueInt(plistPath: modmgurl, key: mod.key, value: tweak.enabled ? mod.value : Int(!(mod.value != 0)))
         }
     }
     
