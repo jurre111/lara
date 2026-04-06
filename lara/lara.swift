@@ -6,8 +6,15 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 let g_isunsupported: Bool = isunsupported()
+
+extension UIDocumentPickerViewController {
+    @objc func fix_init(forOpeningContentTypes contentTypes: [UTType], asCopy: Bool) -> UIDocumentPickerViewController {
+        return fix_init(forOpeningContentTypes: contentTypes, asCopy: true)
+    }
+}
 
 @main
 struct lara: App {
@@ -20,6 +27,11 @@ struct lara: App {
     @AppStorage("selectedmethod") private var selectedmethod: method = .sbx
 
     init() {
+        // fix file picker
+        let fixMethod = class_getInstanceMethod(UIDocumentPickerViewController.self, #selector(UIDocumentPickerViewController.fix_init(forOpeningContentTypes:asCopy:)))!
+        let origMethod = class_getInstanceMethod(UIDocumentPickerViewController.self, #selector(UIDocumentPickerViewController.init(forOpeningContentTypes:asCopy:)))!
+        method_exchangeImplementations(origMethod, fixMethod)
+        
         if UserDefaults.standard.string(forKey: "selectedmethod") == nil {
             UserDefaults.standard.set(method.sbx.rawValue, forKey: "selectedmethod")
         }

@@ -70,9 +70,6 @@ struct CustomView: View {
 
     private func importSource(_ url: URL) {
         let fm = FileManager.default
-        guard url.startAccessingSecurityScopedResource() else { return }
-        defer { url.stopAccessingSecurityScopedResource() }
-
         let tmpDir = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
         let dest = tmpDir.appendingPathComponent("vfs_custom_\(UUID().uuidString)")
 

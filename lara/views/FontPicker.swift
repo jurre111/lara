@@ -128,8 +128,6 @@ struct FontPicker: View {
     
     func importfont(_ url: URL) {
         let fm = FileManager.default
-        guard url.startAccessingSecurityScopedResource() else { return }
-        defer { url.stopAccessingSecurityScopedResource() }
         let dir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Custom")
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
