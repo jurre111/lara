@@ -75,19 +75,20 @@ struct EditorView: View {
             List {
                 Section {
                     Picker("Gestures / Dynamic Island", selection: $currentSubType) {
-                        Text("Original (\(originalSubType))").tag(originalSubType)
+                        Text("Original (\(String(originalSubType)))").tag(originalSubType)
                         ForEach(SubType.allCases) { subtype in
                             Text(subtype.displayName).tag(subtype.rawValue)
                         }
                     }
                     .pickerStyle(.menu)
-                    ForEach(tweaks, id: \.name) { tweak in
-                        Toggle(tweak.name, isOn: .constant(tweak.enabled))
+                    ForEach(tweaks.indices, id: \.self) { index in
+                        Toggle(tweaks[index].name, isOn: $tweaks[index].enabled)
                     }
                     Button() {
                         for tweak in tweaks {
                             applyMgTweak(mods: tweak.mods)
                         }
+                        applySubType()
                     } label: {
                         Text("Apply Tweaks")
                     }
@@ -273,7 +274,7 @@ struct EditorView: View {
                 return
             }
         }
-        setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: customSubType)
+        setPlistValueInt(plistPath: modmgurl, key: "ArtworkDeviceSubType", value: currentSubType)
     }
 
     // private func applyAOD() {
