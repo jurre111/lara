@@ -38,8 +38,6 @@ struct EditorView: View {
     @State private var mgXML: String = ""
     @State private var status: String?
     @State private var respringAlert: String?
-    @State private var customSubType: Int = 2796
-    @State private var customSubTypeEnabled: Bool = false
     @State private var currentSubType: Int = -1
     @State private var originalSubType: Int = -1
     enum SubType: Int, CaseIterable, Identifiable {
@@ -82,7 +80,7 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("Gestures / Dynamic Island", selection: $currentSubType) {
+                    Picker("Gestures / Dynamic Island", selection: $currentSubType) {
                         Text("Original (\(String(originalSubType)))").tag(originalSubType)
                         ForEach(SubType.allCases) { subtype in
                             Text(subtype.displayName).tag(subtype.rawValue)
