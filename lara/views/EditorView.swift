@@ -262,7 +262,7 @@ struct EditorView: View {
         if fm.fileExists(atPath: modmgurl.path) {
             do {
                 let data = try Data(contentsOf: modmgurl)
-                currentData = try Data(contentsOf: URL(fileURLWithPath: path))
+                let currentData = try Data(contentsOf: URL(fileURLWithPath: path))
                 if data == currentData {
                     status = "No changes to apply"
                 } else {
@@ -276,7 +276,7 @@ struct EditorView: View {
                 return
             }
         } else {    
-            status = "\(String(modmgurl)) was not found, nothing to apply"
+            status = "\(modmgurl.absoluteString) was not found, nothing to apply"
             return
         }
     }
@@ -294,7 +294,7 @@ struct EditorView: View {
                 return
             }
         } else {
-            status = "Failed to revert mobilegestalt: \(String(mgurl)) was not found"
+            status = "Failed to revert mobilegestalt: \(mgurl.absoluteString) was not found"
         }
     }
 }
