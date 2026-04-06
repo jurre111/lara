@@ -51,10 +51,10 @@ struct EditorView: View {
         var id: Int { self.rawValue }
         var displayName: String {
             switch self {
-            case .iPhone14Pro: return "iPhone 14 Pro (2556)"
-            case .iPhone14ProMax: return "iPhone 14 Pro Max (2796)"
-            case .iPhone16Pro: return "iOS 18+: iPhone 16 Pro (2622)"
-            case .iPhone16ProMax: return "iOS 18+: iPhone 16 Pro Max (2868)"
+            case .iPhone14Pro: return "14 Pro (2556)"
+            case .iPhone14ProMax: return "14 Pro Max (2796)"
+            case .iPhone16Pro: return "iOS 18+: 16 Pro (2622)"
+            case .iPhone16ProMax: return "iOS 18+: 16 Pro Max (2868)"
             }
         }
     }
@@ -82,17 +82,13 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    HStack {
-                        Text("Gestures /\nDynamic Island")
-                        Spacer()
-                        Picker("Select", selection: $currentSubType) {
-                            Text("Original (\(String(originalSubType)))").tag(originalSubType)
-                            ForEach(SubType.allCases) { subtype in
-                                Text(subtype.displayName).tag(subtype.rawValue)
-                            }
+                    Text("Gestures / Dynamic Island", selection: $currentSubType) {
+                        Text("Original (\(String(originalSubType)))").tag(originalSubType)
+                        ForEach(SubType.allCases) { subtype in
+                            Text(subtype.displayName).tag(subtype.rawValue)
                         }
-                        .pickerStyle(.navigationLink)
                     }
+                    .pickerStyle(.menu)
                     ForEach(tweaks.indices, id: \.self) { index in
                         Toggle(tweaks[index].name, isOn: $tweaks[index].enabled)
                     }
