@@ -95,10 +95,7 @@ struct EditorView: View {
                 } header: {
                     Text("Tweaks")
                 } footer: {
-                    VStack {
-                        Text("Note: some tweaks may not work or cause instability.")
-                        Text("WARNING: Never enable features your device doesn't support.")
-                    }
+                    Text("Note: some tweaks may not work or cause instability.\nWARNING: Never enable features your device doesn't support.")
                 }
                 Section {
                     Button() {
