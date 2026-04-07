@@ -36,7 +36,8 @@ struct EditorView: View {
         }
     }
     
-    private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+    private let path = "/var/mobile/Documents/mbg.plist" // test mg
+    // private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let ogmgurl: URL
 
     init() {
@@ -68,20 +69,19 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    // HStack {
-                    //     Text("Dynamic Island")
-                    //     
-                    //     Spacer()
-                    //     
-                    //     Picker("", selection: $currentSubType) {
-                    //         ForEach(SubType.allCases) { subtype in
-                    //             Text("Original \(String(ogSubType))").tag(ogSubType)
-                    //             Text(subtype.displayName).tag(subtype.rawValue)
-                    //         }
-                    //     }
-                    //     .pickerStyle(MenuPickerStyle())
-                    // }
-                    Text(String(currentSubType))
+                    HStack {
+                        Text("Dynamic Island")
+                        
+                        Spacer()
+                        
+                        Picker("", selection: $currentSubType) {
+                            ForEach(SubType.allCases) { subtype in
+                                Text("Original \(String(ogSubType))").tag(ogSubType)
+                                Text(subtype.displayName).tag(subtype.rawValue)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
                     Toggle("Action Button (iOS 17+)", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
                     Toggle("Allow installing iPadOS apps", isOn: mgkeybinding(["9MZ5AdH43csAUajl/dU+IQ"], type: [Int].self, default: [1], enable: [1, 2]))
                     Toggle("Always on Display (18.0+)", isOn: mgkeybinding(["j8/Omm6s1lsmTDFsXjsBfA", "2OOJf1VhaM7NxfRok3HbWQ"]))
@@ -194,6 +194,10 @@ struct EditorView: View {
     private func apply() {
         let fm = FileManager.default
         do {
+            guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
+                return
+            }
+            oPeik["ArtworkDeviceSubType"] = currentSubType
             try mg.write(to: URL(fileURLWithPath: path))
             mgr.logmsg("wrote custom mbgestalt to \(path)")
             alert = "Applied modified mobilegestalt, respring to see changes."
