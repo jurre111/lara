@@ -75,8 +75,8 @@ struct EditorView: View {
                         Spacer()
                         
                         Picker("", selection: $currentSubType) {
+                            Text("Original (\(String(ogSubType)))").tag(ogSubType)
                             ForEach(SubType.allCases) { subtype in
-                                Text("Original \(String(ogSubType))").tag(ogSubType)
                                 Text(subtype.displayName).tag(subtype.rawValue)
                             }
                         }
