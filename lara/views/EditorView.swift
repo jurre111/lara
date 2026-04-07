@@ -16,7 +16,7 @@ struct EditorView: View {
     @State private var status: String?
     @State private var alert: String?
     @State private var valid: Bool = true
-    @Appstorage("ogSubType") private var ogSubType: Int = -1
+    @AppStorage("ogSubType") private var ogSubType: Int = -1
     @State private var currentSubType: Int = -1
 
     enum SubType: Int, CaseIterable, Identifiable {
