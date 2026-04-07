@@ -15,7 +15,7 @@ struct EditorView: View {
     @State private var mg: NSMutableDictionary
     @State private var status: String?
     @State private var alert: String?
-    @State private var valid: Bool = false
+    @State private var valid: Bool = true
     
     private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let ogmgurl: URL
@@ -93,6 +93,7 @@ struct EditorView: View {
                     } label: {
                         Text("Revert MobileGestalt")
                             .foregroundColor(.red)
+                            .disabled(true)
                     }
                 } header: {
                     Text("Apply")
