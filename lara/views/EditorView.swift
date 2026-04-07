@@ -36,8 +36,7 @@ struct EditorView: View {
         }
     }
     
-    private let path = "/var/mobile/Documents/mbg.plist" // test mg
-    // private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+    private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let ogmgurl: URL
 
     init() {
