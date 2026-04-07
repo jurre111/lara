@@ -17,21 +17,22 @@ struct EditorView: View {
     @State private var alert: String?
     @State private var valid: Bool = true
     @AppStorage("ogSubType") private var ogSubType: Int = -1
-    @State private var currentSubType: Int = -1
+    @State private var selectedSubType: Int = -1
 
     enum SubType: Int, CaseIterable, Identifiable {
         case iPhone14Pro = 2556
         case iPhone14ProMax = 2796
         case iPhone16Pro = 2622
         case iPhone16ProMax = 2868
+        // X gestures for SE?
 
         var id: Int { self.rawValue }
         var displayName: String {
             switch self {
             case .iPhone14Pro: return "14 Pro (2556)"
             case .iPhone14ProMax: return "14 Pro Max (2796)"
-            case .iPhone16Pro: return "iOS 18+: 16 Pro (2622)"
-            case .iPhone16ProMax: return "iOS 18+: 16 Pro Max (2868)"
+            case .iPhone16Pro: return "iOS 18+:\n16 Pro (2622)"
+            case .iPhone16ProMax: return "iOS 18+:\n16 Pro Max (2868)"
             }
         }
     }
@@ -57,9 +58,9 @@ struct EditorView: View {
         guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
             return
         }
-        _currentSubType = State(initialValue: oPeik["ArtworkDeviceSubType"] as? Int ?? -1)
+        _selectedSubType = State(initialValue: oPeik["ArtworkDeviceSubType"] as? Int ?? -1)
         if ogSubType == -1 {
-            ogSubType = currentSubType
+            ogSubType = selectedSubType
         }
 
     }
@@ -73,7 +74,7 @@ struct EditorView: View {
                         
                         Spacer()
                         
-                        Picker("", selection: $currentSubType) {
+                        Picker("", selection: $selectedSubType) {
                             Text("Original (\(String(ogSubType)))").tag(ogSubType)
                             ForEach(SubType.allCases) { subtype in
                                 Text(subtype.displayName).tag(subtype.rawValue)
@@ -81,7 +82,7 @@ struct EditorView: View {
                         }
                         .pickerStyle(.menu)
                     }
-                    Toggle("Action Button (iOS 17+)", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
+                    Toggle("Action Button (17+)", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
                     Toggle("Allow installing iPadOS apps", isOn: mgkeybinding(["9MZ5AdH43csAUajl/dU+IQ"], type: [Int].self, default: [1], enable: [1, 2]))
                     Toggle("Always on Display (18.0+)", isOn: mgkeybinding(["j8/Omm6s1lsmTDFsXjsBfA", "2OOJf1VhaM7NxfRok3HbWQ"]))
                     // Toggle("Apple Intelligence", isOn: bindingForAppleIntelligence())
@@ -89,9 +90,9 @@ struct EditorView: View {
                     Toggle("Apple Pencil", isOn: mgkeybinding(["yhHcB0iH0d1XzPO/CFd3ow"]))
                     Toggle("Boot chime", isOn: mgkeybinding(["QHxt+hGLaBPbQJbXiUJX3w"]))
                     Toggle("Camera button (18.0rc+)", isOn: mgkeybinding(["CwvKxM2cEogD3p+HYgaW0Q", "oOV1jhJbdV3AddkcCg0AEA"]))
-                    Toggle("Charge limit (iOS 17+)", isOn: mgkeybinding(["37NVydb//GP/GrhuTN+exg"]))
+                    Toggle("Charge limit (17+)", isOn: mgkeybinding(["37NVydb//GP/GrhuTN+exg"]))
                     Toggle("Crash Detection (might not work)", isOn: mgkeybinding(["HCzWusHQwZDea6nNhaKndw"]))
-                    Toggle("Dynamic Island (17.4+, might not work)", isOn: mgkeybinding(["YlEtTtHlNesRBMal1CqRaA"]))
+                    // Toggle("Dynamic Island (17.4+, might not work)", isOn: mgkeybinding(["YlEtTtHlNesRBMal1CqRaA"]))
                     // Toggle("Disable region restrictions", isOn: bindingForRegionRestriction())
                     Toggle("Internal Storage info", isOn: mgkeybinding(["LBJfwOEzExRxzlAnSuI7eg"]))
                     // Toggle("Internal stuff", isOn: bindingForInternalStuff())
@@ -123,13 +124,13 @@ struct EditorView: View {
                     Button() {
                         apply()
                     } label: {
-                        Text("Apply Modified MobileGestalt")
+                        Text("Apply to Mobile Gestalt")
                     }
                     .disabled(!valid)
                 } header: {
                     Text("Apply")
                 } footer: {
-                    Text("Use at your own risk.")
+                    Text("Use at your own risk. Always keep a backup of you MobileGestalt somewhere safe.")
                 }
                 
                 HStack(alignment: .top) {
@@ -196,7 +197,7 @@ struct EditorView: View {
             guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
                 return
             }
-            oPeik["ArtworkDeviceSubType"] = currentSubType
+            oPeik["ArtworkDeviceSubType"] = selectedSubType
             try mg.write(to: URL(fileURLWithPath: path))
             mgr.logmsg("wrote custom mbgestalt to \(path)")
             alert = "Applied modified mobilegestalt, respring to see changes."
