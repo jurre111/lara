@@ -16,6 +16,25 @@ struct EditorView: View {
     @State private var status: String?
     @State private var alert: String?
     @State private var valid: Bool = true
+    @Appstorage("ogSubType") private var ogSubType: Int = -1
+    @State private var currentSubType: Int = -1
+
+    enum SubType: Int, CaseIterable, Identifiable {
+        case iPhone14Pro = 2556
+        case iPhone14ProMax = 2796
+        case iPhone16Pro = 2622
+        case iPhone16ProMax = 2868
+
+        var id: Int { self.rawValue }
+        var displayName: String {
+            switch self {
+            case .iPhone14Pro: return "14 Pro (2556)"
+            case .iPhone14ProMax: return "14 Pro Max (2796)"
+            case .iPhone16Pro: return "iOS 18+: 16 Pro (2622)"
+            case .iPhone16ProMax: return "iOS 18+: 16 Pro Max (2868)"
+            }
+        }
+    }
     
     private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let ogmgurl: URL
@@ -35,6 +54,10 @@ struct EditorView: View {
             _mg = State(initialValue: [:])
             _status = State(initialValue: "Failed to copy MobileGestalt: \(error)")
         }
+        _currentSubType = State(initialValue: getPlistIntValue(key: "ArtworkDeviceSubType"))
+        if ogSubType == -1 {
+            ogSubType = currentSubType
+        }
 
     }
 
@@ -42,6 +65,20 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
+                    // HStack {
+                    //     Text("Dynamic Island")
+                    //     
+                    //     Spacer()
+                    //     
+                    //     Picker("", selection: $currentSubType) {
+                    //         ForEach(SubType.allCases) { subtype in
+                    //             Text("Original \(String(ogSubType))").tag(ogSubType)
+                    //             Text(subtype.displayName).tag(subtype.rawValue)
+                    //         }
+                    //     }
+                    //     .pickerStyle(MenuPickerStyle())
+                    // }
+                    Text(String(currentSubType))
                     Toggle("Action Button (iOS 17+)", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
                     Toggle("Allow installing iPadOS apps", isOn: mgkeybinding(["9MZ5AdH43csAUajl/dU+IQ"], type: [Int].self, default: [1], enable: [1, 2]))
                     Toggle("Always on Display (18.0+)", isOn: mgkeybinding(["j8/Omm6s1lsmTDFsXjsBfA", "2OOJf1VhaM7NxfRok3HbWQ"]))
@@ -188,5 +225,61 @@ struct EditorView: View {
                 valid = validate(mg)
             }
         )
+    }
+
+    // Cowabunga shit
+    func getPlistIntValue(key: String) -> Int {
+        func getDictValue(_ dict: [String: Any], _ key: String) -> Int {
+            for (k, v) in mg {
+                if k == key {
+                    return dict[k] as! Int
+                } else if let subDict = v as? [String: Any] {
+                    let temp: Int = getDictValue(subDict, key)
+                    if temp != -1 {
+                        return temp
+                    }
+                }
+            }
+            // did not find key in dictionary
+            return -1
+        }
+        
+        // find the value
+        return getDictValue(mg, key)
+    }
+    func setPlistValueInt(plistPath: String, key: String, value: Int) -> Bool {
+        let stringsData = try! Data(contentsOf: URL(fileURLWithPath: plistPath))
+        
+        // open plist
+        let plist = try! PropertyListSerialization.propertyList(from: stringsData, options: [], format: nil) as! [String: Any]
+        func changeDictValue(_ dict: [String: Any], _ key: String, _ value: Int) -> [String: Any] {
+            var newDict = dict
+            for (k, v) in dict {
+                if k == key {
+                    newDict[k] = value
+                } else if let subDict = v as? [String: Any] {
+                    newDict[k] = changeDictValue(subDict, key, value)
+                }
+            }
+            return newDict
+        }
+        
+        // modify value
+        var newPlist = plist
+        newPlist = changeDictValue(newPlist, key, value)
+        
+        // overwrite the plist
+        let newData = try! PropertyListSerialization.data(fromPropertyList: newPlist, format: .binary, options: 0)
+        if newData.count == stringsData.count {
+            do {
+                try MDC.overwriteFile(at: plistPath, with: newData)
+                return true
+            } catch {
+                return false
+            }
+        } else {
+            // too big
+            return false
+        }
     }
 }
