@@ -1,189 +1,163 @@
 //
-//  FontPicker.swift
+//  EditorView.swift
 //  lara
 //
 //  Created by ruter on 27.03.26.
 //
 
+// Most of the code is from Duy's SparseBox
+
 import SwiftUI
 
-public struct EditorView: View {
-    public init(
-        sysplistpath: String = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
-    ) {
-        self.sysplistpath = sysplistpath
+struct EditorView: View {
+    @ObservedObject private var mgr = laramgr.shared
+    
+    private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+    private let origmgurl: URL
+
+    @State private var mobileGestalt: NSMutableDictionary
+    @State private var status: String?
+    @State private var respringAlert: String?
+
+
+    init() {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        origmgurl = docs.appendingPathComponent("OriginalMobileGestalt.plist")
+        let sysurl = URL(fileURLWithPath: path)
+        do {
+            if !FileManager.default.fileExists(atPath: origmgurl.path) {
+                try FileManager.default.copyItem(at: sysurl, to: origmgurl)
+            }
+            chmod(origmgurl.path, 0o644)
+            
+            _mobileGestalt = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
+        } catch {
+            _mobileGestalt = State(initialValue: [:])
+            _status = State(initialValue: "Failed to copy MobileGestalt: \(error)")
+        }
+
     }
 
-    private let sysplistpath: String
-
-    @State private var text: String = ""
-    @State private var status: String = ""
-    @State private var busy: Bool = false
-    @State private var lastsavedtext: String = ""
-
-    @State private var findquery: String = ""
-    @State private var findindex: String.Index? = nil
-
-    @State private var keyquery: String = ""
-    @State private var keyresult: String = ""
-
-    public var body: some View {
+    var body: some View {
         NavigationStack {
             List {
-                Button("Save") {
-                    savetosys()
+                Section {
+                    Toggle("Action Button (iOS 17+)", isOn: bindingForMGKeys(["cT44WE1EohiwRzhsZ8xEsw"]))
+                    Toggle("Allow installing iPadOS apps", isOn: bindingForMGKeys(["9MZ5AdH43csAUajl/dU+IQ"], type: [Int].self, defaultValue: [1], enableValue: [1, 2]))
+                    Toggle("Always on Display (18.0+)", isOn: bindingForMGKeys(["j8/Omm6s1lsmTDFsXjsBfA", "2OOJf1VhaM7NxfRok3HbWQ"]))
+                    // Toggle("Apple Intelligence", isOn: bindingForAppleIntelligence())
+                    //    .disabled(requiresVersion(18))
+                    Toggle("Apple Pencil", isOn: bindingForMGKeys(["yhHcB0iH0d1XzPO/CFd3ow"]))
+                    Toggle("Boot chime", isOn: bindingForMGKeys(["QHxt+hGLaBPbQJbXiUJX3w"]))
+                    Toggle("Camera button (18.0rc+)", isOn: bindingForMGKeys(["CwvKxM2cEogD3p+HYgaW0Q", "oOV1jhJbdV3AddkcCg0AEA"]))
+                    Toggle("Charge limit (iOS 17+)", isOn: bindingForMGKeys(["37NVydb//GP/GrhuTN+exg"]))
+                    Toggle("Crash Detection (might not work)", isOn: bindingForMGKeys(["HCzWusHQwZDea6nNhaKndw"]))
+                    Toggle("Dynamic Island (17.4+, might not work)", isOn: bindingForMGKeys(["YlEtTtHlNesRBMal1CqRaA"]))
+                    // Toggle("Disable region restrictions", isOn: bindingForRegionRestriction())
+                    Toggle("Internal Storage info", isOn: bindingForMGKeys(["LBJfwOEzExRxzlAnSuI7eg"]))
+                    // Toggle("Internal stuff", isOn: bindingForInternalStuff())
+                    Toggle("Security Research Device", isOn: bindingForMGKeys(["XYlJKKkj2hztRP1NWWnhlw"]))
+                    Toggle("Metal HUD for all apps", isOn: bindingForMGKeys(["EqrsVvjcYDdxHBiQmGhAWw"]))
+                    Toggle("Stage Manager (iPad Only?)", isOn: bindingForMGKeys(["qeaj75wk3HF4DwQ8qbIi7g"]))
+                } header: {
+                    Text("MobileGestalt")
+                } footer: {
+                    Text("Note: some tweaks may not work or cause instability.\nWARNING: Never enable features your device doesn't support.")
                 }
-                .disabled(busy || text.isEmpty)
-                
-                Button("Validate") {
-                    validate()
-                }
-                .disabled(busy || text.isEmpty)
-                
-                Button("Format XML") {
-                    format()
-                }
-                .disabled(busy || text.isEmpty)
-                
-                Spacer()
-                
-                Text(hasunsavedchanges ? "Unsaved" : "Saved")
-                    .font(.caption)
-                    .foregroundColor(hasunsavedchanges ? .orange : .secondary)
-                
-                HStack(spacing: 8) {
-                    TextField("Find", text: $findquery)
-                    Button("Find Next") { findnext() }
-                        .disabled(findquery.isEmpty || text.isEmpty)
-                }
-                
-                HStack(spacing: 8) {
-                    TextField("Key Lookup", text: $keyquery)
-                    Button("Lookup") { lookupkey() }
-                        .disabled(keyquery.isEmpty || text.isEmpty)
-                    Text(keyresult)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-                
-                if !status.isEmpty {
-                    Text(status)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                
-                TextEditor(text: $text)
-                    .font(.system(.body, design: .monospaced))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary.opacity(0.3)))
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        loadfromsys()
+                Section {
+                    Button() {
+                        apply_mg()
                     } label: {
-                        Image(systemName: "arrow.clockwise")
+                        Text("Apply Modified MobileGestalt")
                     }
-                    .disabled(busy)
+                    Button() {
+                        revert_mg()
+                    } label: {
+                        Text("Revert MobileGestalt")
+                            .foregroundColor(.red)
+                    }
+                } header: {
+                    Text("Apply")
+                } footer: {
+                    Text("Use at your own risk.")
                 }
             }
-            .onAppear { loadfromsys() }
+            .navigationTitle("MobileGestalt")
+            .alert("Status", isPresented: .constant(status != nil)) {
+                Button("OK") { status = nil }
+            } message: {
+                Text(status ?? "")
+            }
+            .alert("Done", isPresented: .constant(respringAlert != nil)) {
+                Button("Cancel") { respringAlert = nil }
+                Button("Respring") { mgr.respring() }
+            } message: {
+                Text(respringAlert ?? "")
+            }
+            .onAppear(perform: load)
         }
     }
 
-    private var hasunsavedchanges: Bool { text != lastsavedtext }
-
-    private func loadfromsys() {
-        busy = true; defer { busy = false }
+    private func load() {
         do {
-            let data = try Data(contentsOf: URL(fileURLWithPath: sysplistpath))
-            let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-            let xml = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
-            text = String(data: xml, encoding: .utf8) ?? ""
-            lastsavedtext = text
-            status = "Loaded from system."
-        } catch { status = "Load failed: \(error.localizedDescription)" }
+            mobileGestalt = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
+        } catch {
+            status = "Failed to load mobilegestalt"
+        }
     }
 
-    private func savetosys() {
-        busy = true; defer { busy = false }
+
+    private func apply_mg() {
+        let fm = FileManager.default
         do {
-            guard let data = text.data(using: .utf8) else { status = "Save failed: bad text"; return }
-            let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-            let xml = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
-            try xml.write(to: URL(fileURLWithPath: sysplistpath), options: .atomic)
-            text = String(data: xml, encoding: .utf8) ?? text
-            lastsavedtext = text
-            status = "Saved to system."
-        } catch { status = "Save failed: \(error.localizedDescription)" }
+            try mobileGestalt.write(to: URL(fileURLWithPath: path))
+            mgr.logmsg("wrote custom mbgestalt to \(path)")
+            respringAlert = "Applied modified mobilegestalt, respring to see changes"
+            return
+        } catch {
+            status = "failed to write plist: \(error.localizedDescription)"
+            return
+        }
     }
 
-    private func validate() {
-        do {
-            guard let data = text.data(using: .utf8) else { status = "Validate failed: bad text"; return }
-            _ = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-            status = "Plist is valid."
-        } catch { status = "Plist invalid: \(error.localizedDescription)" }
-    }
-
-    private func format() {
-        do {
-            guard let data = text.data(using: .utf8) else { status = "Format failed: bad text"; return }
-            let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-            let xml = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
-            text = String(data: xml, encoding: .utf8) ?? text
-            status = "Formatted as XML."
-        } catch { status = "Format failed: \(error.localizedDescription)" }
-    }
-
-    private func findnext() {
-        guard !findquery.isEmpty else { return }
-        let start = findindex ?? text.startIndex
-        if let range = text.range(of: findquery, range: start..<text.endIndex) ??
-            text.range(of: findquery, range: text.startIndex..<start) {
-            findindex = range.upperBound
-            let lc = lineandcolumn(at: range.lowerBound, in: text)
-            status = "Found at line \(lc.line), col \(lc.col)."
+    private func revert_mg() {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: origmgurl.path) {
+            do {
+                let data = try Data(contentsOf: origmgurl)
+                try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+                mgr.logmsg("reverted MobileGestalt plist")
+                mobileGestalt = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
+                respringAlert = "Reverted MobileGestalt plist, respring to see changes"
+            } catch {
+                status = "Failed to replace modified plist with original: \(error.localizedDescription)"
+                return
+            }
         } else {
-            status = "Not found."
+            status = "Failed to revert mobilegestalt: \(origmgurl.absoluteString) was not found"
         }
     }
-
-    private func lookupkey() {
-        do {
-            guard let data = text.data(using: .utf8) else { keyresult = "bad text"; return }
-            let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
-            if let value = findkey(in: plist, key: keyquery) {
-                keyresult = "\(value)"
-            } else {
-                keyresult = "not found"
-            }
-        } catch { keyresult = "invalid plist" }
-    }
-
-    private func findkey(in obj: Any, key: String) -> Any? {
-        if let dict = obj as? [String: Any] {
-            if let v = dict[key] { return v }
-            for (_, v) in dict {
-                if let found = findkey(in: v, key: key) { return found }
-            }
-        } else if let arr = obj as? [Any] {
-            for v in arr {
-                if let found = findkey(in: v, key: key) { return found }
-            }
+    private func bindingForMGKeys<T: Equatable>(_ keys: [String], type: T.Type = Int.self, defaultValue: T? = 0, enableValue: T? = 1) -> Binding<Bool> {
+        guard let cacheExtra = mobileGestalt["CacheExtra"] as? NSMutableDictionary else {
+            return State(initialValue: false).projectedValue
         }
-        return nil
-    }
-
-    private func lineandcolumn(at idx: String.Index, in s: String) -> (line: Int, col: Int) {
-        var line = 1, col = 1
-        var i = s.startIndex
-        while i < idx {
-            if s[i] == "\n" { line += 1; col = 1 } else { col += 1 }
-            i = s.index(after: i)
-        }
-        return (line, col)
+        return Binding(
+            get: {
+                if let value = cacheExtra[keys.first!] as? T?, let enableValue {
+                    return value == enableValue
+                }
+                return false
+            },
+            set: { enabled in
+                for key in keys {
+                    if enabled {
+                        cacheExtra[key] = enableValue
+                    } else {
+                        // just remove the key as it will be pulled from device tree if missing
+                        cacheExtra.removeObject(forKey: key)
+                    }
+                }
+            }
+        )
     }
 }
-

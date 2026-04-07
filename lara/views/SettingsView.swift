@@ -16,7 +16,6 @@ struct SettingsView: View {
     @AppStorage("keepalive") private var iskeepalive: Bool = true
     @AppStorage("showfmintabs") private var showfmintabs: Bool = true
     @AppStorage("selectedmethod") private var selectedmethod: method = .hybrid
-    @AppStorage("betaFeaturesEnabled") private var betaFeaturesEnabled: Bool = false
     
     var appname: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
@@ -97,7 +96,6 @@ struct SettingsView: View {
                         }
                     
                     Toggle("Show File Manager in Tabs", isOn: $showfmintabs)
-                    Toggle("Enable Beta Features", isOn: $betaFeaturesEnabled)
                 } header: {
                     Text("Lara Settings")
                 } footer: {

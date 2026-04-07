@@ -10,7 +10,6 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @AppStorage("showfmintabs") private var showfmintabs: Bool = true
-    @AppStorage("betaFeaturesEnabled") private var betaFeaturesEnabled: Bool = false
     @ObservedObject private var mgr = laramgr.shared
     @State private var hasoffsets = haskernproc()
     @State private var showsettings = false
@@ -217,11 +216,11 @@ struct ContentView: View {
                                     WhitelistView()
                                 }
                                 
-                                if betaFeaturesEnabled {
-                                    NavigationLink("MobileGestalt") {
-                                        EditorView()
-                                    }
-                                    
+                                NavigationLink("MobileGestalt") {
+                                    EditorView()
+                                }
+                                
+                                if 1 == 2 {
                                     NavigationLink("Passcode Theme") {
                                         PasscodeView(mgr: mgr)
                                     }
@@ -322,12 +321,11 @@ struct ContentView: View {
                                 NavigationLink("DirtyZero") {
                                     ZeroView(mgr: mgr)
                                 }
-                                
-                                if betaFeaturesEnabled {
-                                    NavigationLink("MobileGestalt") {
-                                        EditorView()
-                                    }
-                                    
+
+                                NavigationLink("MobileGestalt") {
+                                    EditorView()
+                                }
+                                if 1 == 2 {
                                     NavigationLink("Passcode Theme") {
                                         PasscodeView(mgr: mgr)
                                     }
