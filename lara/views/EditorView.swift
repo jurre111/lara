@@ -54,7 +54,13 @@ struct EditorView: View {
             _mg = State(initialValue: [:])
             _status = State(initialValue: "Failed to copy MobileGestalt: \(error)")
         }
-        _currentSubType = State(initialValue: getPlistIntValue(key: "ArtworkDeviceSubType"))
+        guard let cachextra = mg["CacheExtra"] as? NSMutableDictionary else {
+            return State(initialValue: false).projectedValue
+        }
+        guard let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
+            return State(initialValue: false).projectedValue
+        }
+        _currentSubType = State(initialValue: oPeik["ArtworkDeviceSubType"] as? Int ?? -1)
         if ogSubType == -1 {
             ogSubType = currentSubType
         }
@@ -225,61 +231,5 @@ struct EditorView: View {
                 valid = validate(mg)
             }
         )
-    }
-
-    // Cowabunga shit
-    func getPlistIntValue(key: String) -> Int {
-        func getDictValue(_ dict: [String: Any], _ key: String) -> Int {
-            for (k, v) in mg {
-                if k == key {
-                    return dict[k] as! Int
-                } else if let subDict = v as? [String: Any] {
-                    let temp: Int = getDictValue(subDict, key)
-                    if temp != -1 {
-                        return temp
-                    }
-                }
-            }
-            // did not find key in dictionary
-            return -1
-        }
-        
-        // find the value
-        return getDictValue(mg, key)
-    }
-    func setPlistValueInt(plistPath: String, key: String, value: Int) -> Bool {
-        let stringsData = try! Data(contentsOf: URL(fileURLWithPath: plistPath))
-        
-        // open plist
-        let plist = try! PropertyListSerialization.propertyList(from: stringsData, options: [], format: nil) as! [String: Any]
-        func changeDictValue(_ dict: [String: Any], _ key: String, _ value: Int) -> [String: Any] {
-            var newDict = dict
-            for (k, v) in dict {
-                if k == key {
-                    newDict[k] = value
-                } else if let subDict = v as? [String: Any] {
-                    newDict[k] = changeDictValue(subDict, key, value)
-                }
-            }
-            return newDict
-        }
-        
-        // modify value
-        var newPlist = plist
-        newPlist = changeDictValue(newPlist, key, value)
-        
-        // overwrite the plist
-        let newData = try! PropertyListSerialization.data(fromPropertyList: newPlist, format: .binary, options: 0)
-        if newData.count == stringsData.count {
-            do {
-                try MDC.overwriteFile(at: plistPath, with: newData)
-                return true
-            } catch {
-                return false
-            }
-        } else {
-            // too big
-            return false
-        }
     }
 }
