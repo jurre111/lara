@@ -54,7 +54,7 @@ struct EditorView: View {
             _mg = State(initialValue: [:])
             _status = State(initialValue: "Failed to copy MobileGestalt: \(error)")
         }
-        guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let Opeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
+        guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
             return
         }
         _currentSubType = State(initialValue: oPeik["ArtworkDeviceSubType"] as? Int ?? -1)
