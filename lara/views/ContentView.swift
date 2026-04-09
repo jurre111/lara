@@ -29,6 +29,7 @@ struct ContentView: View {
                 } else {
                     Section {
                         Button {
+                            offsets_init()
                             mgr.run()
                         } label: {
                             if mgr.dsrunning {

@@ -69,7 +69,8 @@ struct ToolsView: View {
             
             Section {
                 Button {
-                    killproc("springboard")
+                    globallogger.log(String(format: "0x%llx",procbyname("springboard")))
+                    // killproc("springboard")
                 } label: {
                     Text("Respring (probably broken)")
                 }
@@ -126,7 +127,7 @@ struct ToolsView: View {
             } header: {
                 Text("Process")
             }
-            
+
             Section {
                 HStack {
                     if showtoken {

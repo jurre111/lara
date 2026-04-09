@@ -24,6 +24,7 @@ final class laramgr: ObservableObject {
     @Published var kaccesserror: String?
     @Published var fileopinprogress: Bool = false
     @Published var testresult: String?
+    @Published var remotecallrunning: Bool = false
     
     @Published var vfsready: Bool = false
     @Published var vfsinitlog: String = ""

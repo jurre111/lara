@@ -7,11 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9F4A1D2D3C4E567890123456 /* lara/lib/libxpf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4A1D2E3C4E567890123456 /* lara/lib/libxpf.dylib */; };
 		9F4A1D2F3C4E567890123456 /* lara/lib/libxpf.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4A1D2E3C4E567890123456 /* lara/lib/libxpf.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		9F4A1D403C4E567890123456 /* lara/lib/libgrabkernel2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4A1D413C4E567890123456 /* lara/lib/libgrabkernel2.dylib */; };
 		9F4A1D423C4E567890123456 /* lara/lib/libgrabkernel2.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9F4A1D413C4E567890123456 /* lara/lib/libgrabkernel2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		CCF37D652F81D1B600DF4745 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CCF37D642F81D1B600DF4745 /* ZIPFoundation */; };
+		CC6845832F868CE700B08EB0 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CC6845822F868CE700B08EB0 /* ZIPFoundation */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,6 +25,16 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC6845A02F86948300B08EB0 /* Embed App Clips */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/AppClips";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			name = "Embed App Clips";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -37,18 +45,15 @@
 		CC6842DF2F8311C300B08EB0 /* libSystem.B.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libSystem.B.tbd; path = usr/lib/libSystem.B.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+	/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		CC70C4A12F78D4C10052726B /* Exceptions for "lara" folder in "lara" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				other/media.xcassets,
 			);
 			target = CC1C8B382F71DF9C00206982 /* lara */;
 		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
+	/* End PBXFileSystemSynchronizedBuildFileExceptionSet section *//* Begin PBXFileSystemSynchronizedRootGroup section */
 		CC1C8B3B2F71DF9C00206982 /* lara */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -64,9 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F4A1D2D3C4E567890123456 /* lara/lib/libxpf.dylib in Frameworks */,
-				9F4A1D403C4E567890123456 /* lara/lib/libgrabkernel2.dylib in Frameworks */,
-				CCF37D652F81D1B600DF4745 /* ZIPFoundation in Frameworks */,
+				CC6845832F868CE700B08EB0 /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,7 +122,9 @@
 				CC1C8B352F71DF9C00206982 /* Sources */,
 				CC1C8B362F71DF9C00206982 /* Frameworks */,
 				9F4A1D313C4E567890123456 /* Embed Frameworks */,
+				9F4A1D503C4E567890123456 /* Force Sign Embedded Dylibs */,
 				CC1C8B372F71DF9C00206982 /* Resources */,
+				CC6845A02F86948300B08EB0 /* Embed App Clips */,
 			);
 			buildRules = (
 			);
@@ -130,7 +135,7 @@
 			);
 			name = lara;
 			packageProductDependencies = (
-				CCF37D642F81D1B600DF4745 /* ZIPFoundation */,
+				CC6845822F868CE700B08EB0 /* ZIPFoundation */,
 			);
 			productName = lara;
 			productReference = CC1C8B392F71DF9C00206982 /* lara.app */;
@@ -161,7 +166,7 @@
 			mainGroup = CC1C8B302F71DF9C00206982;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				CCF37D632F81D1B600DF4745 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				CC6845812F868CE700B08EB0 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CC1C8B3A2F71DF9C00206982 /* Products */;
@@ -182,6 +187,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		9F4A1D503C4E567890123456 /* Force Sign Embedded Dylibs */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)",
+				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)/libgrabkernel2.dylib",
+				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)/libxpf.dylib",
+			);
+			name = "Force Sign Embedded Dylibs";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e; if [ -z \"$EXPANDED_CODE_SIGN_IDENTITY\" ]; then exit 0; fi; fw=\"$CODESIGNING_FOLDER_PATH/Frameworks\"; for f in \"$fw/libgrabkernel2.dylib\" \"$fw/libxpf.dylib\"; do if [ -f \"$f\" ]; then /usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --timestamp=none \"$f\"; fi; done";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		CC1C8B352F71DF9C00206982 /* Sources */ = {
@@ -326,6 +352,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DN4S6CXFWY;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -347,11 +374,9 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/lib",
 					"$(PROJECT_DIR)/lara/lib",
 				);
 				MARKETING_VERSION = 1.2;
-				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roooot.laraapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -374,6 +399,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DN4S6CXFWY;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -395,11 +421,9 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/lib",
 					"$(PROJECT_DIR)/lara/lib",
 				);
 				MARKETING_VERSION = 1.2;
-				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.roooot.laraapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -437,7 +461,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		CCF37D632F81D1B600DF4745 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+		CC6845812F868CE700B08EB0 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
 			requirement = {
@@ -448,9 +472,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		CCF37D642F81D1B600DF4745 /* ZIPFoundation */ = {
+		CC6845822F868CE700B08EB0 /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = CCF37D632F81D1B600DF4745 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			package = CC6845812F868CE700B08EB0 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
 		};
 /* End XCSwiftPackageProductDependency section */

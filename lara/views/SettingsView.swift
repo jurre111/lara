@@ -162,6 +162,35 @@ struct SettingsView: View {
                     }
                     
                     HStack(alignment: .top) {
+                        AsyncImage(url: URL(string: "https://github.com/wh1te4ever.png")) { image in
+                            image
+                                .resizable()
+                                .scaledToFill()
+                        } placeholder: {
+                            ProgressView()
+                        }
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                        
+                        VStack(alignment: .leading) {
+                            Text("wh1te4ever")
+                                .font(.headline)
+                            
+                            Text("Made darksword-kexploit-fun.")
+                                .font(.subheadline)
+                                .foregroundColor(Color.secondary)
+                        }
+                        
+                        Spacer()
+                    }
+                    .onTapGesture {
+                        if let url = URL(string: "https://github.com/wh1te4ever"),
+                           UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                    
+                    HStack(alignment: .top) {
                         AsyncImage(url: URL(string: "https://github.com/AppInstalleriOSGH.png")) { image in
                             image
                                 .resizable()

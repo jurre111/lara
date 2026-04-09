@@ -42,12 +42,14 @@ If lara doesnt work on your device, and you want to help the project, please als
 ## features:
 ### implemented:
 - Font Overwrite
-- 3 App Bypass
+- Custom Overwrite
 - File Manager (Full Disk r/w)
+- MobileGestalt Editor
+- 3 App Bypass (Broken)
 - DirtyZero 2 (Broken)
 
 ### coming soon:
-- MobileGestalt Editor
+- remotecall????
 
 ## known issues:
 - wont work on M5, A19 and A19 Pro due to MTE
@@ -56,7 +58,6 @@ If lara doesnt work on your device, and you want to help the project, please als
 - dirtyzero does not work.
 - ui is buggy on 17.x
 - doesnt work on ipad m2?
-- doesnt work on a18 pro?
 - kernelcache download broken for some versions.
 
 ## installation:
