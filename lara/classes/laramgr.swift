@@ -40,6 +40,8 @@ final class laramgr: ObservableObject {
     
     static let shared = laramgr()
     static let fontpath = "/System/Library/Fonts/Core/SFUI.ttf"
+    static let italicfontpath = "/System/Library/Fonts/Core/SFUIItalic.ttf"
+    static let monofontpath = "/System/Library/Fonts/Core/SFUIMono.ttf"
     private init() {}
     
     func run(completion: ((Bool) -> Void)? = nil) {

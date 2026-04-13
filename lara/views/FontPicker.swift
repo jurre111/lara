@@ -18,12 +18,27 @@ struct importedfont: Identifiable, Codable {
     let path: String
 }
 
+enum styletarget: String, CaseIterable {
+    case standard = "Standard"
+    case mono = "Mono"
+    case italic = "Italic"
+
+    var path: String {
+        switch self {
+            case .standard: return laramgr.fontpath
+            case .mono: return laramgr.monofontpath
+            case .italic: return laramgr.italicfontpath
+        }
+    }
+}
+
 struct FontPicker: View {
     @ObservedObject var mgr: laramgr
     @State private var showimporter = false
     @State private var customfonts: [importedfont] = load()
     @StateObject private var repostore = fontrepostore()
     @State private var showrepomgr = false
+    @State private var selectedTarget: styletarget = .standard
 
     var body: some View {
         NavigationStack {
@@ -60,6 +75,14 @@ struct FontPicker: View {
                 }
                 
                 Section {
+                    Picker("Target Style", selection: $selectedTarget) {
+                        ForEach(styletarget.allCases, id: \.self) { target in
+                            Text(target.rawValue).tag(target)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.vertical, 5)
+
                     if !customfonts.isEmpty {
                         ForEach(customfonts) { font in
                             Button {
@@ -69,7 +92,7 @@ struct FontPicker: View {
                                     save(customfonts)
                                     return
                                 }
-                                let success = mgr.vfsoverwritefromlocalpath(target: laramgr.fontpath, source: font.path)
+                                let success = mgr.vfsoverwritefromlocalpath(target: selectedTarget.path, source: font.path)
                                 success ? mgr.logmsg("font changed to \(font.name)") : mgr.logmsg("failed to change font")
                             } label: {
                                 Text(font.name)
