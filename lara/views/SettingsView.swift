@@ -7,12 +7,15 @@
 
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @ObservedObject var mgr: laramgr
     @Binding var hasoffsets: Bool
     @State private var showresetalert: Bool = false
     @State private var downloadingkernelcache = false
+    @State private var showingKernelcacheImporter: Bool = false
+    @State private var importingkernelcache: Bool = false
     @AppStorage("loggernobullshit") private var loggernobullshit: Bool = true
     @AppStorage("keepalive") private var iskeepalive: Bool = true
     @AppStorage("showfmintabs") private var showfmintabs: Bool = true
@@ -133,6 +136,41 @@ struct SettingsView: View {
                         Button("Fetch Kernelcache") {
                             mgr.run()
                         }
+                        
+                        Button("Import Kernelcache from Files") {
+                            guard !importingkernelcache else { return }
+                            showingKernelcacheImporter = true
+                        }
+                        .disabled(importingkernelcache)
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("How to obtain a kernelcache (macOS)")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundColor(.primary)
+
+                            Text("1. Download the IPSW tool for your device.")
+                            Link("https://github.com/blacktop/ipsw/releases",
+                                 destination: URL(string: "https://github.com/blacktop/ipsw/releases")!)
+
+                            Text("2. Extract the archive.")
+                            Text("3. Open Terminal.")
+                            Text("4. Navigate to the extracted folder:")
+                            Text("cd /path/to/ipsw_3.1.671_something_something/")
+                                .font(.system(.caption2, design: .monospaced))
+                                .textSelection(.enabled)
+
+                            Text("5. Extract the kernel:")
+                            Text("./ipsw extract --kernel [drag your ipsw here]")
+                                .font(.system(.caption2, design: .monospaced))
+                                .textSelection(.enabled)
+
+                            Text("6. Get the kernelcache file.")
+                            Text("7. Transfer the kernelcache to your iCloud or iPhone.")
+                            Text("8. Tap the button above and select the kernelcache, for example kernelcache.release.iPhone14,3.")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 4)
                     }
                     
                     Button {
@@ -297,6 +335,44 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+        }
+        .fileImporter(isPresented: $showingKernelcacheImporter,
+                      allowedContentTypes: [.data],
+                      allowsMultipleSelection: false) { result in
+            switch result {
+            case .success(let urls):
+                guard let url = urls.first else { return }
+                importingkernelcache = true
+                DispatchQueue.global(qos: .userInitiated).async {
+                    var ok = false
+                    let shouldStopAccess = url.startAccessingSecurityScopedResource()
+                    defer {
+                        if shouldStopAccess {
+                            url.stopAccessingSecurityScopedResource()
+                        }
+                    }
+                    let fm = FileManager.default
+                    if let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first {
+                        let dest = docs.appendingPathComponent("kernelcache")
+                        do {
+                            if fm.fileExists(atPath: dest.path) {
+                                try fm.removeItem(at: dest)
+                            }
+                            try fm.copyItem(at: url, to: dest)
+                            ok = dlkerncache()
+                        } catch {
+                            print("failed to import kernelcache: \(error)")
+                            ok = false
+                        }
+                    }
+                    DispatchQueue.main.async {
+                        hasoffsets = ok
+                        importingkernelcache = false
+                    }
+                }
+            case .failure:
+                break
+            }
         }
         .alert("Clear Kernelcache Data?", isPresented: $showresetalert) {
             Button("Cancel", role: .cancel) {}
