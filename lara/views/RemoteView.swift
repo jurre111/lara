@@ -10,6 +10,7 @@ import Darwin
 
 struct RemoteView: View {
     @ObservedObject var mgr: laramgr
+    @State private var statusBarTimeFormat: String = "HH:mm"
     @State private var running: Bool = false
     @State private var columns: Int = 5
     @State private var performanceHUD: Int = -1
@@ -26,15 +27,25 @@ struct RemoteView: View {
     var body: some View {
         List {
             Section {
+                TextField("Date format (e.g. HH:mm)", text: $statusBarTimeFormat)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+
                 Button {
                     run("Status Bar Time Format") {
-                        status_bar_tweak(mgr.sbProc)
-                        return "status_bar_tweak() done"
+                        status_bar_time_format(mgr.sbProc, statusBarTimeFormat)
+                        return "status_bar_time_format() done"
                     }
                 } label: {
-                    Text("Status Bar Time Format")
+                    Text("Apply")
                 }
+            } header: {
+                Text("Status Bar Time Format")
+            } footer: {
+                Text("The text automatically updates every MINUTE")
+            }
 
+            Section {
                 Button {
                     run("Hide Icon Labels") {
                         let hidden = hide_icon_labels(mgr.sbProc)
