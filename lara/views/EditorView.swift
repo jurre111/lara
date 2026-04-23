@@ -189,6 +189,7 @@ struct EditorView: View {
             .alert("Done", isPresented: .constant(alert != nil)) {
                 Button("Cancel") { alert = nil }
                 Button("Respring") {
+                    alert = nil
                     mgr.respring()
                 }
             } message: {
