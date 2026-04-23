@@ -13,7 +13,7 @@ struct ContentView: View {
     @ObservedObject private var mgr = laramgr.shared
     @State private var hasoffsets = true
     @State private var showsettings = false
-    @AppStorage("selectedmethod") private var selectedmethod: method = .hybrid
+    @State private var selectedmethod: method = .hybrid
 
     var body: some View {
         NavigationStack {
