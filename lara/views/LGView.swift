@@ -97,7 +97,7 @@ struct LGView: View {
     }
     
     private func validate(_ dict: NSMutableDictionary) -> Bool {
-        return !gp.allKeys.isEmpty
+        return !dict.allKeys.isEmpty
     }
 
     private func load() {
@@ -106,9 +106,15 @@ struct LGView: View {
         } catch {
             status = "Failed to load GlobalPreferences"
         }
+
+        valid = validate(gp)
     }
 
     private func apply() {
+        if !validate(gp) {
+            status = "Plist is invalid."
+            return
+        }
         do {
             let data = try PropertyListSerialization.data(
                 fromPropertyList: gp,
@@ -122,7 +128,7 @@ struct LGView: View {
             )
             if result.ok {
                 load()
-                if validate(gp) {
+                if valid {
                     mgr.logmsg("overwrote GlobalPreferences.plist at \(path)")
                     status = "Applied plist, reboot to see changes."
                 } else {
