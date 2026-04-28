@@ -260,6 +260,12 @@ struct ContentView: View {
                                             }
 
                                             NavigationLink {
+                                                EditorView()
+                                            } label: {
+                                                Label("MobileGestalt", systemImage: "gear")
+                                            }
+
+                                            NavigationLink {
                                                 VarCleanView()
                                             } label: {
                                                 Label("VarClean", systemImage: "sparkles")

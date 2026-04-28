@@ -373,6 +373,15 @@ struct SettingsView: View {
                 } footer: {
                     Text("Manually save offsets after modifying values like t1sz_boot")
                 }
+
+                Section {
+                    // invite from README.md
+                    Link("Join lara on Discord", destination: URL(string: "https://discord.gg/gw8PcRF3Jr")!)
+                } header: {
+                    Text("Support")
+                } footer: {
+                    Text("If you experience any issues or need support, feel free to join the lara discord server.")
+                }
                 
                 Section {
                     HStack(alignment: .top) {
