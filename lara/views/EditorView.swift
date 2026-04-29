@@ -55,12 +55,6 @@ struct EditorView: View {
     let fm = FileManager.default
 
     init() {
-        if firstMGLoad {
-            firstMGLoad = false
-        } else {
-            firstLoad = false
-        }
-
         mgr.logmsg("\n(mbg) Loading MobileGestalt from system...")
         let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
@@ -357,6 +351,13 @@ struct EditorView: View {
                         mgr.logmsg("(mbg) Loading backups from system failed: \(error)")
                         status = "Failed to load backup from file: \(error). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
                     }
+                }
+            }
+            .onAppear {
+                if firstMGLoad {
+                    firstMGLoad = false
+                } else {
+                    firstLoad = false
                 }
             }
         }
