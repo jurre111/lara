@@ -84,22 +84,6 @@ struct EditorView: View {
         if ogSubType == -1 {
             ogSubType = subType
         }
-        result = findBackups()
-        mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
-        _backupFound = State(initialValue: result.ok)
-        if result.ok {
-            result = validateBackups()
-            mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
-            _backupValid = State(initialValue: result.ok)
-            if !result.ok {
-                _status = State(initialValue: "Validating backups...\n\n\(result.message)")
-            }
-        } else {
-            if backupFound != false {
-                _status = State(initialValue: "Finding backups...\n\n\(result.message)")
-            }
-        }
-
     }
 
     var body: some View {
@@ -360,6 +344,22 @@ struct EditorView: View {
                 } else {
                     firstLoad = false
                 }
+
+                result = findBackups()
+                mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
+                _backupFound = State(initialValue: result.ok)
+                if result.ok {
+                    result = validateBackups()
+                    mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
+                    _backupValid = State(initialValue: result.ok)
+                    if !result.ok {
+                        _status = State(initialValue: "Validating backups...\n\n\(result.message)")
+                    }
+                } else {
+                    if backupFound != false {
+                        _status = State(initialValue: "Finding backups...\n\n\(result.message)")
+                    }
+                }
             }
         }
     }
@@ -394,7 +394,7 @@ struct EditorView: View {
             guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary else { return (false, "missing CacheExtra (!?)") }
             if let model = cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] as? String,
                 let build = cacheExtra["mZfUC7qo4pURNhyMHZ62RQ"] as? String {
-                return (!cacheExtra.allKeys.isEmpty && model == deviceModel && build == iosBuild, "\n\n(validate) \(cacheExtra.allKeys.isEmpty ? "empty CacheExtra" : "Cachextra exists")\n\(model != deviceModel ? "device model key doesn't match device" : "device model key matches device")\n\(build != iosBuild ? "iOS version key doesnt match device's" : "iOS version key matches device's")\n\n")
+                return (!cacheExtra.allKeys.isEmpty && model == deviceModel && build == iosBuild, "\(cacheExtra.allKeys.isEmpty ? "empty CacheExtra, " : "Cachextra exists, ")\(model != deviceModel ? "device model key doesn't match device, " : "device model key matches device, ")\(build != iosBuild ? "iOS version key doesnt match device's" : "iOS version key matches device's")")
             } else {
                 return (false, "missing critical keys")
             }
@@ -446,14 +446,14 @@ struct EditorView: View {
         var backups: [URL: NSMutableDictionary] = [ogmgurl: [:], secondBackupURL: [:]]
         do {
             for backupURL in backups.keys {
-                if let backupDict = try NSMutableDictionary(contentsOf: ogmgurl) {
+                if let backupDict = try NSMutableDictionary(contentsOf: backupURL) {
                     backups[backupURL] = backupDict
                     let result = validate(backupDict, file: backupURL)
                     guard result.ok else {
-                        return (false, "backup at path \(backupURL.path) is invalid: \(result.message). Open Backup Manager and open your original backup from files")
+                        return (false, "backup at path \(backupURL.path) is invalid:\n\n\(result.message)\n\nOpen Backup Manager and open your original backup from files")
                     }
                 } else {
-                    return (false, "backup at path \(ogmgurl.path) contains invalid plist. Open Backup Manager and open your original backup from files")
+                    return (false, "backup at path \(backupURL.path) contains invalid plist. Open Backup Manager and open your original backup from files")
                 }
             }
             if backups[ogmgurl] != backups[secondBackupURL] {
@@ -567,6 +567,9 @@ struct EditorView: View {
                 
                 let result = validate(mg)
                 valid = result.ok
+                if !valid {
+                    status = "MobileGestalt is not valid: \n\n\(result.message)\n\nClick reload from plist or contact support in the lara discord server."
+                }
             }
         )
     }
@@ -594,6 +597,9 @@ struct EditorView: View {
                 
                 let result = validate(mg)
                 valid = result.ok
+                if !valid {
+                    status = "MobileGestalt is not valid: \n\n\(result.message)\n\nClick reload from plist or contact support in the lara discord server."
+                }
             }
         )
     }
