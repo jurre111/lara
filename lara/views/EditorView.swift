@@ -345,7 +345,7 @@ struct EditorView: View {
                     firstLoad = false
                 }
 
-                result = findBackups()
+                var result = findBackups()
                 mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
                 backupFound = result.ok
                 if result.ok {
