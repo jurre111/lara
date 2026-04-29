@@ -307,7 +307,7 @@ struct EditorView: View {
                 if case .success(let urls) = result, let importurl = urls.first {
                     do {
                         let uploaded = try NSMutableDictionary(contentsOf: importurl, error: ())
-                        validcheck = validate(uploaded, file: importurl)
+                        let validcheck = validate(uploaded, file: importurl)
                         if validcheck.ok {
                             for backup in [ogmgurl, secondBackupURL] {
                                 if fm.fileExists(atPath: backup.path) {
@@ -319,7 +319,7 @@ struct EditorView: View {
                             backupValid = true
                         } else {
                             backupFound = true
-                            status = "Loaded backup is invalid: \(result.message). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
+                            status = "Loaded backup is invalid: \(validCheck.message). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
                         }
                     } catch {
                         backupFound = true
@@ -408,7 +408,7 @@ struct EditorView: View {
     }
 
     private func validateBackups() -> (ok: Bool, message: String) {
-        backups = [ogmgurl: nil, secondBackupURL: nil]
+        var backups = [ogmgurl: nil, secondBackupURL: nil]
         do {
             for backupURL in backups.keys {
                 if let backupDict = try NSMutableDictionary(contentsOf: ogmgurl) {
