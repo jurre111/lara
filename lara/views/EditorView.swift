@@ -347,17 +347,17 @@ struct EditorView: View {
 
                 result = findBackups()
                 mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
-                _backupFound = State(initialValue: result.ok)
+                backupFound = result.ok
                 if result.ok {
                     result = validateBackups()
                     mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
-                    _backupValid = State(initialValue: result.ok)
+                    backupValid = result.ok
                     if !result.ok {
-                        _status = State(initialValue: "Validating backups...\n\n\(result.message)")
+                        status = "Validating backups...\n\n\(result.message)"
                     }
                 } else {
                     if backupFound != false {
-                        _status = State(initialValue: "Finding backups...\n\n\(result.message)")
+                        status = "Finding backups...\n\n\(result.message)"
                     }
                 }
             }
