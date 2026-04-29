@@ -82,15 +82,16 @@ struct EditorView: View {
             ogSubType = subType
         }
         result = findBackups()
+        _backupFound = State(initialValue: result.ok)
         if result.ok {
             result = validateBackups()
-            backupValid = result.ok
+            _backupValid = State(initialValue: result.ok)
             if !result.ok {
-                status = "Validating backups...\n\n\(result.message)"
+                _status = State(initialValue: "Validating backups...\n\n\(result.message)")
             }
         } else {
             if backupFound != false {
-                status = "Finding backups...\n\n\(result.message)"
+                _status = State(initialValue: "Finding backups...\n\n\(result.message)")
             }
         }
 
@@ -198,7 +199,7 @@ struct EditorView: View {
                                     } else {
                                         Text("invalid.")
                                             .monospaced(true)
-                                            .foregroundColor(.orange)
+                                            .foregroundColor(.red)
                                     }
                                 }
                                 Button() {
@@ -225,7 +226,7 @@ struct EditorView: View {
                             } header: {
                                 Text("Backup Manager")
                             } footer: {
-                                Text("You can uplallowedContentTypes:oad your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
+                                Text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
                             }
                         }
                     }
@@ -427,8 +428,9 @@ struct EditorView: View {
                     guard result.ok else {
                         return (false, "backup at path \(backupURL.path) is invalid: \(result.message). Open Backup Manager and open your original backup from files")
                     }
+                } else {
+                    return (false, "backup at path \(ogmgurl.path) contains invalid plist. Open Backup Manager and open your original backup from files")
                 }
-                return (false, "backup at path \(ogmgurl.path) contains invalid plist. Open Backup Manager and open your original backup from files")
             }
             if backups[ogmgurl] != backups[secondBackupURL] {
                 return (false, "backups don't match. If you've modified \(ogmgurl.path) or \(secondBackupURL.path), open Backup Manager and open your original backup from files. Else, contact support.")
