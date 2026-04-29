@@ -181,45 +181,47 @@ struct EditorView: View {
                     }
                     .disabled(backupValid != true)
                     NavigationLink("Backup Manager") {
-                        List() {
-                            HStack {
-                                Text("Backups Status")
-                                Spacer()
-                                if backupValid == true {
-                                    Text("valid!")
-                                        .monospaced(true)
-                                        .foregroundColor(.green)
-                                } else {
-                                    Text("invalid.")
-                                        .monospaced(true)
-                                        .foregroundColor(.orange)
-                                }
-                            }
-                            Button() {
-                                let result = findBackups()
-                                if result.ok {
-                                    result = validateBackups()
-                                    backupValid = result.ok
-                                    if !result.ok {
-                                        status = "Validating backups...\n\n\(result.message)"
-                                    }
-                                } else {
-                                    if backupFound != false {
-                                        status = "Finding backups...\n\n\(result.message)"
+                        List {
+                            Section {
+                                HStack {
+                                    Text("Backups Status")
+                                    Spacer()
+                                    if backupValid == true {
+                                        Text("valid!")
+                                            .monospaced(true)
+                                            .foregroundColor(.green)
+                                    } else {
+                                        Text("invalid.")
+                                            .monospaced(true)
+                                            .foregroundColor(.orange)
                                     }
                                 }
-                            } label: {
-                                Text("Reload")
+                                Button() {
+                                    let result = findBackups()
+                                    if result.ok {
+                                        result = validateBackups()
+                                        backupValid = result.ok
+                                        if !result.ok {
+                                            status = "Validating backups...\n\n\(result.message)"
+                                        }
+                                    } else {
+                                        if backupFound != false {
+                                            status = "Finding backups...\n\n\(result.message)"
+                                        }
+                                    }
+                                } label: {
+                                    Text("Reload")
+                                }
+                                Button() {
+                                    showimporter = true
+                                } label: {
+                                    Text("Import Backup from files")
+                                }
+                            } header: {
+                                Text("Backup Manager")
+                            } footer: {
+                                Text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
                             }
-                            Button() {
-                                showimporter = true
-                            } label: {
-                                Text("Import Backup from files")
-                            }
-                        } header: {
-                            Text("Backup Manager")
-                        } footer: {
-                            Text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
                         }
                     }
                 } header: {
