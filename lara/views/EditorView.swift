@@ -57,7 +57,17 @@ struct EditorView: View {
     init() {
         let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
-        load()
+        do {
+            _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
+        } catch {
+            _mg = State(initialValue: [:])
+            _status = State(initialValue: "Failed to load mobilegestalt: \(error). Reopen the page to try again.")
+        }
+        let result = validate(mg)
+        _valid = State(initialValue: result.ok)
+        if !valid {
+            _status = State(initialValue: "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server.")
+        }
         guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
             _status = State(initialValue: "Failed to get dictionaries from MobileGestalt. Reopen the page to try again.")
             return
