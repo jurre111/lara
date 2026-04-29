@@ -301,14 +301,14 @@ struct EditorView: View {
             }
             .fileImporter(
                 isPresented: $showimporter,
-                allowedContentTypes: [.plist],
+                allowedContentTypes: [.propertyList],
                 allowsMultipleSelection: false
             ) { result in
                 if case .success(let urls) = result, let importurl = urls.first {
                     do {
                         let uploaded = try NSMutableDictionary(contentsOf: importurl, error: ())
-                        result = validate(uploaded, file: importurl)
-                        if result.ok {
+                        validcheck = validate(uploaded, file: importurl)
+                        if validcheck.ok {
                             for backup in [ogmgurl, secondBackupURL] {
                                 if fm.fileExists(atPath: backup.path) {
                                     try fm.removeItem(at: backup)
@@ -408,21 +408,20 @@ struct EditorView: View {
     }
 
     private func validateBackups() -> (ok: Bool, message: String) {
+        backups = [ogmgurl: nil, secondBackupURL: nil]
         do {
-            if let backup1 = try NSMutableDictionary(contentsOf: ogmgurl),
-                let backup2 = try NSMutableDictionary(contentsOf: secondBackupURL) {
-                var result = validate(backup1, file: ogmgurl)
-                guard result.ok else {
-                    return (false, "backup at path \(ogmgurl.path) is invalid. Open Backup Manager and open your original backup from files")
+            for backupURL in backups.keys {
+                if let backupDict = try NSMutableDictionary(contentsOf: ogmgurl) {
+                    backups[backupURL] = backupDict
+                    let result = validate(backupDict, file: backupURL)
+                    guard result.ok else {
+                        return (false, "backup at path \(backupURL.path) is invalid: \(result.message). Open Backup Manager and open your original backup from files")
+                    }
                 }
-                result = validate(backup2, file: secondBackupURL)
-                guard result.ok else {
-                    return (false, "backup at path \(secondBackupURL.path) is invalid. Open Backup Manager and open your original backup from files")
-                }
-                if backup1 != backup2 {
-                    return (false, "backups don't match. If you've modified \(ogmgurl.path) or \(secondBackupURL.path), open Backup Manager and open your original backup from files. Else, contact support.")
-                    
-                }
+                return (false, "backup at path \(ogmgurl.path) contains invalid plist. Open Backup Manager and open your original backup from files")
+            }
+            if backups[ogmgurl] != backups[secondBackupURL] {
+                return (false, "backups don't match. If you've modified \(ogmgurl.path) or \(secondBackupURL.path), open Backup Manager and open your original backup from files. Else, contact support.")
             }
         } catch {
             return (false, "failed to validate backup: \(error)\nReopen the page or contact support.")
