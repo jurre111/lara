@@ -218,7 +218,7 @@ struct EditorView: View {
                     //                 Text("Import Backup from files")
                     //             }
                     //         } header: {
-                    /URL(fileURLWithPath: path)/             Text("Backup Manager")
+                    //             Text("Backup Manager")
                     //         } footer: {
                     //             Text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
                     //         }
