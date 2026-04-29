@@ -187,7 +187,7 @@ struct EditorView: View {
                 Section {
                     NavigationLink("Backup Manager") {
                         List {
-                            // Section {
+                            Section {
                             //     HStack {
                             //         Text("Backups Status")
                             //         Spacer()
@@ -222,11 +222,11 @@ struct EditorView: View {
                             //     } label: {
                             //         Text("Import Backup from files")
                             //     }
-                            // } header: {
-                            //     Text("Backup Manager")
-                            // } footer: {
-                            //     Text("You can uplallowedContentTypes:oad your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
-                            // }
+                            } header: {
+                                Text("Backup Manager")
+                            } footer: {
+                                Text("You can uplallowedContentTypes:oad your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
+                            }
                         }
                     }
                     Button() {
