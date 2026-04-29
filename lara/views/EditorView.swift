@@ -49,6 +49,7 @@ struct EditorView: View {
     
     private let path = "/var/mobile/Documents/mbg.plist" // "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let ogmgurl: URL
+    let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
     let os = ProcessInfo().operatingSystemVersion
     let fm = FileManager.default
 
@@ -57,11 +58,11 @@ struct EditorView: View {
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         load()
         guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
-            _status = State(initialValue: "Failed to get dictionaries from MobileGestalt. Reopen the page.")
+            _status = State(initialValue: "Failed to get dictionaries from MobileGestalt. Reopen the page to try again.")
             return
         }
         guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
-            _status = State(initialValue: "Failed to get SubType from MobileGestalt. Reopen the page.")
+            _status = State(initialValue: "Failed to get SubType from MobileGestalt. Reopen the page to try again.")
             return
         }
         _selectedSubType = State(initialValue: subType)
@@ -168,10 +169,36 @@ struct EditorView: View {
                         Text("Revert MobileGestalt")
                     }
                     .disabled(backupValid != true)
+                    NavigationLink("Backup Manager") {
+                        List {
+                            HStack {
+                                Text("Backups Status")
+                                Spacer()
+                                if backupValid == true {
+                                    Text("valid!")
+                                        .monospaced(true)
+                                        .foregroundColor(.green)
+                                } else {
+                                    Text("invalid.")
+                                        .monospaced(true)
+                                        .foregroundColor(.orange)
+                                }
+                            }
+                            Button() {
+                                showImporter = true
+                            } label: {
+                                Text("Import Backup from files")
+                            }
+                        } header: {
+                            Text("Backup Manager")
+                        } footer: {
+                            text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
+                        }
+                    }
                 } header: {
-                    Text("Revert")
+                    Text("Backup")
                 } footer: {
-                    Text("Only use when you're experiencing issues or when your MobileGestalt is invalid.")
+                    Text("Only use revert when you're experiencing issues or when your MobileGestalt is invalid.")
                 }
                 
                 HStack(alignment: .top) {
@@ -221,19 +248,15 @@ struct EditorView: View {
             .alert(firstLoad ? "Welcome" : "No Backup Found", isPresented: .constant(backupFound == false)) {
                 Button("Load from system") {
                     do {
-                        let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
                         try fm.copyItem(at: URL(fileURLWithPath: path), to: ogmgurl)
                         try fm.copyItem(at: URL(fileURLWithPath: path), to: secondBackupURL)
                         backupFound = true
-                        backupValid = checkBackup()
-                        if backupValid == true {
-                            status = "Successfully backed up MobileGestalt from system! Reload the page."
-                        } else {
-                            status = "Loaded backup is invalid. Reload the page."
-                        }
+                        // we can just set backupValid to true as the original mbg is already checked by load() in init() which was just ran
+                        backupValid = true
+                        status = "Successfully backed up MobileGestalt from system! It's highly recommended to create an ONLINE BACKUP aswell. To do so, go to lara's documents folder and save ogmobilegestalt.plist somehwere safe in the cloud."
                     } catch {
                         backupFound = true
-                        status = "Failed to load backup from system: \(error). Reload the page"
+                        status = "Failed to load backup from system: \(error). Reopen the page to retry"
                     }
                 }
                 Button("Load from files") {
@@ -241,7 +264,7 @@ struct EditorView: View {
                 }
             } message: {
                 if !firstLoad {
-                    Text("In both the application documents and /var/mobile/.lara no backup of your MobileGestalt was found. You have to load a new one. Do you want to load a new backup from the system or from your own backup file? Loading a backup from the system will backup the current MobileGestalt as-is, which does NOT necessarily mean it is your original MobileGestalt file. If you know your current MobileGestalt is not the true original file, please open your true original MobileGestalt from files.\n\nIf you don't understand this popup, load a backup from files if you have one. Else contact support.")
+                    Text("In both the application documents and /var/mobile/.lara no backup of your MobileGestalt was found. You have to load a new one to use MobileGestalt tweaks safely. Do you want to load a new backup from the system or from your own backup file? Loading a backup from the system will backup the current MobileGestalt as-is, which does NOT necessarily mean it is your original MobileGestalt file. If you know your current MobileGestalt is not the true original file, please open your true original MobileGestalt from files.\n\nIf you don't understand this popup, load a backup from files if you have one or contact support in the lara discord server.")
                 } else {
                     Text("Welcome! To ensure safe usage of the MobileGestalt editing feature, backups are auto-saved. Because it's your first time using MobileGestalt tweaks in lara, you don't have a backup saved at the expected location yet. Lara can automatically load the current MobileGestalt file from the system. If you're sure that your current MobileGestalt is the true original or want to make a backup of it in this state, click load from system.\n\nIf your current MobileGestalt is not the original, upload the true original from files if you have it. If you don't have the original anywhere, ping @jurre6835 in the lara discord server.")
                 }
@@ -253,26 +276,30 @@ struct EditorView: View {
             ) { result in
                 if case .success(let urls) = result, let importurl = urls.first {
                     do {
-                        let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
-                        try fm.copyItem(at: importurl, to: ogmgurl)
-                        try fm.copyItem(at: importurl, to: secondBackupURL)
-                        backupFound = true
-                        backupValid = checkBackup()
-                        if backupValid == true {
-                            status = "Successfully backed up MobileGestalt from loaded file! Reload the page."
+                        let uploaded = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
+                        if validate(uploaded, file: importurl) {
+                            for backup in [ogmgurl, secondBackupURL] {
+                                if fm.fileExists(atPath: backup.path) {
+                                    try fm.removeItem(at: backup)
+                                }
+                                try fm.copyItem(at: importurl, to: backup)
+                            }
+                            backupFound = true
+                            backupValid = true
                         } else {
-                            status = "Loaded backup is invalid. Reload the page."
+                            backupFound = true
+                            status = "Loaded backup is invalid. Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
                         }
                     } catch {
                         backupFound = true
-                        status = "Failed to load backup from file: \(error). Reload the page."
+                        status = "Failed to load backup from file: \(error). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
                     }
                 }
             }
         }
     }
     
-    private func validate(_ dict: NSMutableDictionary, file: URL) -> Bool {
+    private func validate(_ dict: NSMutableDictionary, file: URL? = nil) -> Bool {
         // only way to get device model and iOS build
         var size: size_t = 0
         sysctlbyname("hw.machine", nil, &size, nil, 0)
@@ -286,9 +313,13 @@ struct EditorView: View {
         let iosBuild = String(cString: build)
 
         do {
-            let data = try Data(contentsOf: file)
+            let data = (file != nil) ? try Data(contentsOf: file) : try PropertyListSerialization.data(
+                fromPropertyList: mg,
+                format: .binary,
+                options: 0
+            )
             if data.count < 5000 {
-                status = "File too small: \(data.count) bytes."
+                mgr.logmsg("validate: File too small: \(data.count) bytes.")
                 return false
             }
             guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary else { return false }
@@ -296,7 +327,7 @@ struct EditorView: View {
                 return !cacheExtra.allKeys.isEmpty
             }
         } catch {
-            status = "Failed to validate MobileGestalt: \(error). Reload the page or contact support."
+            mgr.logmsg("validate: Failed to validate MobileGestalt: \(error). Reopen the page or contact support.")
         }
         return false
     }
@@ -306,14 +337,13 @@ struct EditorView: View {
             mg = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
         } catch {
             mg = [:]
-            status = "Failed to load mobilegestalt: \(error). Reload the page."
+            status = "Failed to load mobilegestalt: \(error). Reopen the page to try again."
         }
-        valid = validate(mg, file: URL(fileURLWithPath: path))
+        valid = validate(mg)
     }
 
     private func checkBackup() -> Bool {
         do {
-            let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
             if !fm.fileExists(atPath: ogmgurl.path) {
                 if !fm.fileExists(atPath: secondBackupURL.path) {
                     backupFound = false
@@ -347,7 +377,7 @@ struct EditorView: View {
                 return false
             }
         } catch {
-            status = "Failed to check backup: \(error). Reload the page or contact support."
+            status = "Failed to check backup: \(error). Reopen the page or contact support."
             return false
         }
         return true
@@ -362,7 +392,7 @@ struct EditorView: View {
                 }
                 oPeik["ArtworkDeviceSubType"] = selectedSubType
             } else {
-                status = "Selected SubType is -1? Reload the page."
+                status = "Selected SubType is -1? Reopen the page."
                 return
             }
             let data = try PropertyListSerialization.data(
@@ -384,22 +414,20 @@ struct EditorView: View {
             }
             
         } catch {
-            status = "serialization failed: \(error.localizedDescription). Reload the page or contact support."
+            status = "serialization failed: \(error.localizedDescription). Reopen the page or contact support."
         }
     }
 
     private func revert() {
         do {
             backupValid = checkBackup()
-            if !backupValid! {
-                status = "Backup is invalid."
-                return
+            if backupValid == true {
+                try fm.replaceItem(at: URL(fileURLWithPath: path), withItemAt: ogmgurl)
+                alert = "Reverted MobileGestalt from backup, respring to see changes."
             }
-            try fm.replaceItem(at: URL(fileURLWithPath: path), withItemAt: ogmgurl)
-            alert = "Reverted MobileGestalt from backup, respring to see changes."
             
         } catch {
-            status = "serialization failed: \(error.localizedDescription). Reload the page or contact support."
+            status = "Reverting failed: \(error.localizedDescription). Reopen the page or contact support."
         }
     }
 
@@ -441,7 +469,7 @@ struct EditorView: View {
                     }
                 }
                 
-                valid = validate(mg, file: URL(fileURLWithPath: path))
+                valid = validate(mg)
             }
         )
     }
@@ -467,7 +495,7 @@ struct EditorView: View {
                     }
                 }
                 
-                valid = validate(mg, file: URL(fileURLWithPath: path))
+                valid = validate(mg)
             }
         )
     }
