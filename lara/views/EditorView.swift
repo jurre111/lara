@@ -60,6 +60,8 @@ struct EditorView: View {
         } else {
             firstLoad = false
         }
+
+        mgr.logmsg("\n(mbg) Loading MobileGestalt from system...")
         let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         do {
@@ -69,6 +71,7 @@ struct EditorView: View {
             _status = State(initialValue: "Failed to load mobilegestalt: \(error). Reopen the page to try again.")
         }
         var result = validate(mg)
+        mgr.logmsg("(mbg) Validating MobileGestalt...\n(mbg) \(result.message)")
         _valid = State(initialValue: result.ok)
         if !valid {
             _status = State(initialValue: "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server.")
@@ -87,9 +90,11 @@ struct EditorView: View {
             ogSubType = subType
         }
         result = findBackups()
+        mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
         _backupFound = State(initialValue: result.ok)
         if result.ok {
             result = validateBackups()
+            mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
             _backupValid = State(initialValue: result.ok)
             if !result.ok {
                 _status = State(initialValue: "Validating backups...\n\n\(result.message)")
@@ -209,8 +214,10 @@ struct EditorView: View {
                                 }
                                 Button() {
                                     var result = findBackups()
+                                    mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
                                     if result.ok {
                                         result = validateBackups()
+                                        mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
                                         backupValid = result.ok
                                         if !result.ok {
                                             status = "Validating backups...\n\n\(result.message)"
@@ -224,6 +231,7 @@ struct EditorView: View {
                                     Text("Reload")
                                 }
                                 Button() {
+                                    mgr.logmsg("(mbg) Uploading backup from files...")
                                     showimporter = true
                                 } label: {
                                     Text("Import Backup from files")
@@ -231,7 +239,7 @@ struct EditorView: View {
                             } header: {
                                 Text("Backup Manager")
                             } footer: {
-                                Text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
+                                Text("You can upload your own backup from files if your current backups are invalid or not the true original. Be aware that this overrides your current backups. This cannot be restored.")
                             }
                         }
                     }
@@ -298,15 +306,18 @@ struct EditorView: View {
                         try fm.copyItem(at: URL(fileURLWithPath: path), to: ogmgurl)
                         try fm.copyItem(at: URL(fileURLWithPath: path), to: secondBackupURL)
                         backupFound = true
-                        // we can just set backupValid to true as the original mbg is already checked by load() in init() which was just ran
+                        // we can just set backupValid to true as the original mbg is already checked in init() which was just ran
                         backupValid = true
+                        mgr.logmsg("(mbg) Loading backups from system...\n(mbg) success!")
                         status = "Successfully backed up MobileGestalt from system! It's highly recommended to create an ONLINE BACKUP aswell. To do so, go to lara's documents folder and save ogmobilegestalt.plist somewhere safe in the cloud."
                     } catch {
                         backupFound = true
+                        mgr.logmsg("(mbg) Loading backups from system...\n(mbg) failed: \(error)")
                         status = "Failed to load backup from system: \(error). Reopen the page to retry"
                     }
                 }
                 Button("Load from files") {
+                    mgr.logmsg("(mbg) Uploading backup from files...")
                     showimporter = true
                 }
             } message: {
@@ -325,6 +336,7 @@ struct EditorView: View {
                     do {
                         let uploaded = try NSMutableDictionary(contentsOf: importurl, error: ())
                         let validcheck = validate(uploaded, file: importurl)
+                        mgr.logmsg("(mbg) Loading uploaded backup...\n(mbg) Validating loaded backup...\n(mbg) \(validcheck.message)")
                         if validcheck.ok {
                             for backup in [ogmgurl, secondBackupURL] {
                                 if fm.fileExists(atPath: backup.path) {
@@ -335,12 +347,14 @@ struct EditorView: View {
                             backupFound = true
                             backupValid = true
                             status = "Succes! Loaded and verified imported backup!"
+                            mgr.logmsg("(mbg) Successfully loaded imported backup!")
                         } else {
                             backupFound = true
                             status = "Loaded backup is invalid: \(validcheck.message). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
                         }
                     } catch {
                         backupFound = true
+                        mgr.logmsg("(mbg) Loading backups from system failed: \(error)")
                         status = "Failed to load backup from file: \(error). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
                     }
                 }
@@ -388,6 +402,7 @@ struct EditorView: View {
     }
 
     private func load() {
+        mgr.logmsg("(mbg) Loading MobileGestalt from system...")
         do {
             mg = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
         } catch {
@@ -472,7 +487,7 @@ struct EditorView: View {
             )
             
             if result.ok {
-                mgr.logmsg("overwrote MobileGestalt at \(path)")
+                mgr.logmsg("(mbg) overwrote MobileGestalt at \(path)")
                 alert = "Applied modified mobilegestalt, respring to see changes."
             } else {
                 status = "overwrite failed: \(result.message)"
