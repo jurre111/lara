@@ -55,13 +55,14 @@ struct EditorView: View {
     let fm = FileManager.default
 
     init() {
-        mgr.logmsg("\n(mbg) Loading MobileGestalt from system...")
         let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         do {
             _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
+            mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) success!")
         } catch {
             _mg = State(initialValue: [:])
+            mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) failed: \(error)")
             _status = State(initialValue: "Failed to load mobilegestalt: \(error). Reopen the page to try again.")
         }
         var result = validate(mg)
