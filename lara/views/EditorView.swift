@@ -319,7 +319,7 @@ struct EditorView: View {
                             backupValid = true
                         } else {
                             backupFound = true
-                            status = "Loaded backup is invalid: \(validCheck.message). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
+                            status = "Loaded backup is invalid: \(validcheck.message). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
                         }
                     } catch {
                         backupFound = true
@@ -408,7 +408,7 @@ struct EditorView: View {
     }
 
     private func validateBackups() -> (ok: Bool, message: String) {
-        var backups = [ogmgurl: nil, secondBackupURL: nil]
+        var backups: [URL: NSMutableDictionary] = [ogmgurl: [:], secondBackupURL: [:]]
         do {
             for backupURL in backups.keys {
                 if let backupDict = try NSMutableDictionary(contentsOf: ogmgurl) {
