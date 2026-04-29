@@ -63,7 +63,7 @@ struct EditorView: View {
             _mg = State(initialValue: [:])
             _status = State(initialValue: "Failed to load mobilegestalt: \(error). Reopen the page to try again.")
         }
-        let result = validate(mg)
+        var result = validate(mg)
         _valid = State(initialValue: result.ok)
         if !valid {
             _status = State(initialValue: "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server.")
@@ -81,7 +81,7 @@ struct EditorView: View {
         if ogSubType == -1 {
             ogSubType = subType
         }
-        var result = findBackups()
+        result = findBackups()
         if result.ok {
             result = validateBackups()
             backupValid = result.ok
