@@ -70,7 +70,18 @@ struct EditorView: View {
         if ogSubType == -1 {
             ogSubType = subType
         }
-        backupValid = checkBackup()
+        let result = findBackup()
+        if result.ok {
+            result = validateBackups()
+            backupValid = result.ok
+            if !result.ok {
+                status = "Validating backups...\n\n\(result.message)"
+            }
+        } else {
+            if backupFound != false {
+                status = "Finding backups...\n\n\(result.message)"
+            }
+        }
 
     }
 
@@ -185,14 +196,30 @@ struct EditorView: View {
                                 }
                             }
                             Button() {
-                                showImporter = true
+                                let result = findBackup()
+                                if result.ok {
+                                    result = validateBackups()
+                                    backupValid = result.ok
+                                    if !result.ok {
+                                        status = "Validating backups...\n\n\(result.message)"
+                                    }
+                                } else {
+                                    if backupFound != false {
+                                        status = "Finding backups...\n\n\(result.message)"
+                                    }
+                                }
+                            } label: {
+                                Text("Reload")
+                            }
+                            Button() {
+                                showimporter = true
                             } label: {
                                 Text("Import Backup from files")
                             }
                         } header: {
                             Text("Backup Manager")
                         } footer: {
-                            text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
+                            Text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
                         }
                     }
                 } header: {
@@ -299,7 +326,7 @@ struct EditorView: View {
         }
     }
     
-    private func validate(_ dict: NSMutableDictionary, file: URL? = nil) -> Bool {
+    private func validate(_ dict: NSMutableDictionary, file: URL? = nil) -> (ok: Bool, message: String) {
         // only way to get device model and iOS build
         var size: size_t = 0
         sysctlbyname("hw.machine", nil, &size, nil, 0)
@@ -312,24 +339,30 @@ struct EditorView: View {
         sysctlbyname("kern.osversion", &build, &size, nil, 0)
         let iosBuild = String(cString: build)
 
+        let data: Data
         do {
-            let data = (file != nil) ? try Data(contentsOf: file) : try PropertyListSerialization.data(
-                fromPropertyList: mg,
-                format: .binary,
-                options: 0
-            )
+            if let fileURL = file {
+                data = try Data(contentsOf: file)
+            } else {
+                data = try Data(contentsOf: file) : try PropertyListSerialization.data(
+                    fromPropertyList: mg,
+                    format: .binary,
+                    options: 0
+                )
+            }
             if data.count < 5000 {
-                mgr.logmsg("validate: File too small: \(data.count) bytes.")
-                return false
+                return (false, "file too small (\(data.count) bytes)")
             }
             guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary else { return false }
-            if (cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] as? String) == deviceModel && (cacheExtra["mZfUC7qo4pURNhyMHZ62RQ"] as? String) == iosBuild {
-                return !cacheExtra.allKeys.isEmpty
+            if let model = cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] as? String,
+                let build = cacheExtra["mZfUC7qo4pURNhyMHZ62RQ"] as? String {
+                return (!cacheExtra.allKeys.isEmpty && model == deviceModel && build == iosBuild, "\(cacheExtra.allKeys.isEmpty ? "empty CacheExtra;" : "Cachextra exists;") \(model != deviceModel ? "device model key doesn't match device;" : "device model key matches device") \(build != iosBuild ? "iOS version key doesnt match device's" : "iOS version key matches device's")")
+            } else {
+                return (false, "missing critical keys")
             }
         } catch {
-            mgr.logmsg("validate: Failed to validate MobileGestalt: \(error). Reopen the page or contact support.")
+            return(false, "error while validating MobileGestalt: \(error)")
         }
-        return false
     }
 
     private func load() {
@@ -339,15 +372,19 @@ struct EditorView: View {
             mg = [:]
             status = "Failed to load mobilegestalt: \(error). Reopen the page to try again."
         }
-        valid = validate(mg)
+        result = validate(mg)
+        valid = result.ok
+        if !valid {
+            status = "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server."
+        }
     }
 
-    private func checkBackup() -> Bool {
+    private func findBackups() -> (ok: Bool, message: String) {
         do {
             if !fm.fileExists(atPath: ogmgurl.path) {
                 if !fm.fileExists(atPath: secondBackupURL.path) {
                     backupFound = false
-                    return false
+                    return (false, "no backups found")
                 } else {
                     try fm.copyItem(at: secondBackupURL, to: ogmgurl)
                     chmod(ogmgurl.path, 0o644)
@@ -360,27 +397,33 @@ struct EditorView: View {
                 try fm.copyItem(at: ogmgurl, to: secondBackupURL)
                 chmod(secondBackupURL.path, 0o644)
             }
-            backupFound = true
+            return (true, "backups found!")
+        } catch {
+            return (false, "failed to check for backups: \(error)\nReopen the page or contact support.") 
+        }
+    }
 
-            let backup1 = try NSDictionary(contentsOf: ogmgurl)
-            let backup2 = try NSDictionary(contentsOf: secondBackupURL)
-            guard validate(backup1, file: ogmgurl) else {
-                status = "Backup at path \(ogmgurl.path) is invalid. Please replace it with the original backup or contact support."
-                return false
-            }
-            guard validate(backup2, file: secondBackupURL) else {
-                status = "Backup at path \(secondBackupURL.path) is invalid. Please replace it with the original backup or contact support."
-                return false
-            }
-            if backup1 != backup2 {
-                status = "Backups don't match. If you've modified \(ogmgurl.path) or \(secondBackupURL.path), please replace it with the original backup. Else, contact support."
-                return false
+    private func validateBackups() -> (ok: Bool, message: String) {
+        do {
+            if let backup1 = try NSMutableDictionary(contentsOf: ogmgurl)
+                let backup2 = try NSMutableDictionary(contentsOf: secondBackupURL) {
+                let result = validate(backup1, file: ogmgurl)
+                guard result.ok else {
+                    return (false, "backup at path \(ogmgurl.path) is invalid. Open Backup Manager and open your original backup from files")
+                }
+                result = validate(backup2, file: secondBackupURL)
+                guard result.ok else {
+                    return (false, "backup at path \(secondBackupURL.path) is invalid. Open Backup Manager and open your original backup from files")
+                }
+                if backup1 != backup2 {
+                    return (false, "backups don't match. If you've modified \(ogmgurl.path) or \(secondBackupURL.path), open Backup Manager and open your original backup from files. Else, contact support.")
+                    
+                }
             }
         } catch {
-            status = "Failed to check backup: \(error). Reopen the page or contact support."
-            return false
+            return (false, "failed to validate backup: \(error)\nReopen the page or contact support.")
         }
-        return true
+        return (true, "backups are valid")
     }
 
     private func apply() {
@@ -420,12 +463,26 @@ struct EditorView: View {
 
     private func revert() {
         do {
-            backupValid = checkBackup()
-            if backupValid == true {
-                try fm.replaceItem(at: URL(fileURLWithPath: path), withItemAt: ogmgurl)
-                alert = "Reverted MobileGestalt from backup, respring to see changes."
+            let result = findBackup()
+            if result.ok {
+                result = validateBackups()
+                backupValid = result.ok
+                if result.ok {
+                    result = laramgr.shared.lara_overwritefile(
+                        target: path,
+                        source: ogmgurl
+                    )
+                    if result.ok {
+                        alert = "Reverted MobileGestalt from backup, respring to see changes."
+                    } else {
+                        status = "Overwriting \(path) failed: \(result.message). Reopen the page or contact support"
+                    }
+                } else {
+                    status = "Validating backups...\n\n\(result.message)"
+                }
+            } else {
+                status = "Finding backups...\n\n\(result.message)"
             }
-            
         } catch {
             status = "Reverting failed: \(error.localizedDescription). Reopen the page or contact support."
         }

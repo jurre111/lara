@@ -258,13 +258,6 @@ struct ContentView: View {
                                                     Label("File Manager", systemImage: "folder")
                                                 }
                                             }
-
-                                            NavigationLink {
-                                                EditorView()
-                                            } label: {
-                                                Label("MobileGestalt", systemImage: "gear")
-                                            }
-
                                             NavigationLink {
                                                 VarCleanView()
                                             } label: {
