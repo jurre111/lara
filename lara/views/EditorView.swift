@@ -70,7 +70,7 @@ struct EditorView: View {
         if ogSubType == -1 {
             ogSubType = subType
         }
-        let result = findBackups()
+        var result = findBackups()
         if result.ok {
             result = validateBackups()
             backupValid = result.ok
@@ -195,27 +195,27 @@ struct EditorView: View {
                             //             .foregroundColor(.orange)
                             //     }
                             // }
-                            Button() {
-                                let result = findBackups()
-                                if result.ok {
-                                    result = validateBackups()
-                                    backupValid = result.ok
-                                    if !result.ok {
-                                        status = "Validating backups...\n\n\(result.message)"
-                                    }
-                                } else {
-                                    if backupFound != false {
-                                        status = "Finding backups...\n\n\(result.message)"
-                                    }
-                                }
-                            } label: {
-                                Text("Reload")
-                            }
-                            Button() {
-                                showimporter = true
-                            } label: {
-                                Text("Import Backup from files")
-                            }
+                            // Button() {
+                            //     let result = findBackups()
+                            //     if result.ok {
+                            //         result = validateBackups()
+                            //         backupValid = result.ok
+                            //         if !result.ok {
+                            //             status = "Validating backups...\n\n\(result.message)"
+                            //         }
+                            //     } else {
+                            //         if backupFound != false {
+                            //             status = "Finding backups...\n\n\(result.message)"
+                            //         }
+                            //     }
+                            // } label: {
+                            //     Text("Reload")
+                            // }
+                            // Button() {
+                            //     showimporter = true
+                            // } label: {
+                            //     Text("Import Backup from files")
+                            // }
                         } header: {
                             Text("Backup Manager")
                         } footer: {
