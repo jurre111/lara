@@ -344,7 +344,7 @@ struct EditorView: View {
             if let fileURL = file {
                 data = try Data(contentsOf: file)
             } else {
-                data = try Data(contentsOf: file) : try PropertyListSerialization.data(
+                data = try PropertyListSerialization.data(
                     fromPropertyList: mg,
                     format: .binary,
                     options: 0
@@ -405,7 +405,7 @@ struct EditorView: View {
 
     private func validateBackups() -> (ok: Bool, message: String) {
         do {
-            if let backup1 = try NSMutableDictionary(contentsOf: ogmgurl)
+            if let backup1 = try NSMutableDictionary(contentsOf: ogmgurl),
                 let backup2 = try NSMutableDictionary(contentsOf: secondBackupURL) {
                 let result = validate(backup1, file: ogmgurl)
                 guard result.ok else {
