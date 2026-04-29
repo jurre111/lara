@@ -180,50 +180,50 @@ struct EditorView: View {
                         Text("Revert MobileGestalt")
                     }
                     .disabled(backupValid != true)
-                    NavigationLink("Backup Manager") {
-                        List {
-                            Section {
-                                HStack {
-                                    Text("Backups Status")
-                                    Spacer()
-                                    if backupValid == true {
-                                        Text("valid!")
-                                            .monospaced(true)
-                                            .foregroundColor(.green)
-                                    } else {
-                                        Text("invalid.")
-                                            .monospaced(true)
-                                            .foregroundColor(.orange)
-                                    }
-                                }
-                                Button() {
-                                    let result = findBackups()
-                                    if result.ok {
-                                        result = validateBackups()
-                                        backupValid = result.ok
-                                        if !result.ok {
-                                            status = "Validating backups...\n\n\(result.message)"
-                                        }
-                                    } else {
-                                        if backupFound != false {
-                                            status = "Finding backups...\n\n\(result.message)"
-                                        }
-                                    }
-                                } label: {
-                                    Text("Reload")
-                                }
-                                Button() {
-                                    showimporter = true
-                                } label: {
-                                    Text("Import Backup from files")
-                                }
-                            } header: {
-                                Text("Backup Manager")
-                            } footer: {
-                                Text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
-                            }
-                        }
-                    }
+                    // NavigationLink("Backup Manager") {
+                    //     List {
+                    //         Section {
+                    //             HStack {
+                    //                 Text("Backups Status")
+                    //                 Spacer()
+                    //                 if backupValid == true {
+                    //                     Text("valid!")
+                    //                         .monospaced(true)
+                    //                         .foregroundColor(.green)
+                    //                 } else {
+                    //                     Text("invalid.")
+                    //                         .monospaced(true)
+                    //                         .foregroundColor(.orange)
+                    //                 }
+                    //             }
+                    //             Button() {
+                    //                 var result = findBackups()
+                    //                 if result.ok {
+                    //                     result = validateBackups()
+                    //                     backupValid = result.ok
+                    //                     if !result.ok {
+                    //                         status = "Validating backups...\n\n\(result.message)"
+                    //                     }
+                    //                 } else {
+                    //                     if backupFound != false {
+                    //                         status = "Finding backups...\n\n\(result.message)"
+                    //                     }
+                    //                 }
+                    //             } label: {
+                    //                 Text("Reload")
+                    //             }
+                    //             Button() {
+                    //                 showimporter = true
+                    //             } label: {
+                    //                 Text("Import Backup from files")
+                    //             }
+                    //         } header: {
+                    /URL(fileURLWithPath: path)/             Text("Backup Manager")
+                    //         } footer: {
+                    //             Text("You can upload your own backup from files if your current backups are invalid. Be aware that this overrides your current backups. This cannot be restored.")
+                    //         }
+                    //     }
+                    // }
                 } header: {
                     Text("Backup")
                 } footer: {
@@ -305,7 +305,7 @@ struct EditorView: View {
             ) { result in
                 if case .success(let urls) = result, let importurl = urls.first {
                     do {
-                        let uploaded = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
+                        let uploaded = try NSMutableDictionary(contentsOf: importurl, error: ())
                         if validate(uploaded, file: importurl) {
                             for backup in [ogmgurl, secondBackupURL] {
                                 if fm.fileExists(atPath: backup.path) {
