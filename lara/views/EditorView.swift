@@ -24,11 +24,11 @@ struct EditorView: View {
     // backup stuff
     @State private var backupFound: Bool?
     @State private var backupValid: Bool?
+    @State private var firstLoad: Bool = true
 
 
     @AppStorage("ogSubType") private var ogSubType: Int = -1
-    // @AppStorage("defaultMgKeys") private var defaultMgKeys: [String: Any]?
-    @AppStorage("firstLoad") private var firstLoad: Bool = true
+    @AppStorage("firstMGLoad") private var firstMGLoad: Bool = true
 
     enum SubType: Int, CaseIterable, Identifiable {
         case iPhone14Pro = 2556
@@ -55,6 +55,11 @@ struct EditorView: View {
     let fm = FileManager.default
 
     init() {
+        if firstMGLoad {
+            firstMGLoad = false
+        } else {
+            firstLoad = false
+        }
         let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         do {
@@ -234,6 +239,7 @@ struct EditorView: View {
                         revert()
                     } label: {
                         Text("Revert MobileGestalt")
+                            .foregroundColor(.red)
                     }
                     .disabled(backupValid != true)
                 } header: {
@@ -294,7 +300,7 @@ struct EditorView: View {
                         backupFound = true
                         // we can just set backupValid to true as the original mbg is already checked by load() in init() which was just ran
                         backupValid = true
-                        status = "Successfully backed up MobileGestalt from system! It's highly recommended to create an ONLINE BACKUP aswell. To do so, go to lara's documents folder and save ogmobilegestalt.plist somehwere safe in the cloud."
+                        status = "Successfully backed up MobileGestalt from system! It's highly recommended to create an ONLINE BACKUP aswell. To do so, go to lara's documents folder and save ogmobilegestalt.plist somewhere safe in the cloud."
                     } catch {
                         backupFound = true
                         status = "Failed to load backup from system: \(error). Reopen the page to retry"
@@ -328,6 +334,7 @@ struct EditorView: View {
                             }
                             backupFound = true
                             backupValid = true
+                            status = "Succes! Loaded and verified imported backup!"
                         } else {
                             backupFound = true
                             status = "Loaded backup is invalid: \(validcheck.message). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
@@ -371,7 +378,7 @@ struct EditorView: View {
             guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary else { return (false, "missing CacheExtra (!?)") }
             if let model = cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] as? String,
                 let build = cacheExtra["mZfUC7qo4pURNhyMHZ62RQ"] as? String {
-                return (!cacheExtra.allKeys.isEmpty && model == deviceModel && build == iosBuild, "\(cacheExtra.allKeys.isEmpty ? "empty CacheExtra;" : "Cachextra exists;") \(model != deviceModel ? "device model key doesn't match device;" : "device model key matches device") \(build != iosBuild ? "iOS version key doesnt match device's" : "iOS version key matches device's")")
+                return (!cacheExtra.allKeys.isEmpty && model == deviceModel && build == iosBuild, "\n\n(validate) \(cacheExtra.allKeys.isEmpty ? "empty CacheExtra" : "Cachextra exists")\n\(model != deviceModel ? "device model key doesn't match device" : "device model key matches device")\n\(build != iosBuild ? "iOS version key doesnt match device's" : "iOS version key matches device's")\n\n")
             } else {
                 return (false, "missing critical keys")
             }
