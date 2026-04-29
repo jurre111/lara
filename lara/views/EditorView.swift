@@ -70,7 +70,7 @@ struct EditorView: View {
         if ogSubType == -1 {
             ogSubType = subType
         }
-        let result = findBackup()
+        let result = findBackups()
         if result.ok {
             result = validateBackups()
             backupValid = result.ok
@@ -182,21 +182,21 @@ struct EditorView: View {
                     .disabled(backupValid != true)
                     NavigationLink("Backup Manager") {
                         List {
-                            HStack {
-                                Text("Backups Status")
-                                Spacer()
-                                if backupValid == true {
-                                    Text("valid!")
-                                        .monospaced(true)
-                                        .foregroundColor(.green)
-                                } else {
-                                    Text("invalid.")
-                                        .monospaced(true)
-                                        .foregroundColor(.orange)
-                                }
-                            }
+                            // HStack {
+                            //     Text("Backups Status")
+                            //     Spacer()
+                            //     if backupValid == true {
+                            //         Text("valid!")
+                            //             .monospaced(true)
+                            //             .foregroundColor(.green)
+                            //     } else {
+                            //         Text("invalid.")
+                            //             .monospaced(true)
+                            //             .foregroundColor(.orange)
+                            //     }
+                            // }
                             Button() {
-                                let result = findBackup()
+                                let result = findBackups()
                                 if result.ok {
                                     result = validateBackups()
                                     backupValid = result.ok
@@ -342,7 +342,7 @@ struct EditorView: View {
         let data: Data
         do {
             if let fileURL = file {
-                data = try Data(contentsOf: file)
+                data = try Data(contentsOf: fileURL)
             } else {
                 data = try PropertyListSerialization.data(
                     fromPropertyList: mg,
@@ -353,7 +353,7 @@ struct EditorView: View {
             if data.count < 5000 {
                 return (false, "file too small (\(data.count) bytes)")
             }
-            guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary else { return false }
+            guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary else { return (false, "missing CacheExtra (!?)") }
             if let model = cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] as? String,
                 let build = cacheExtra["mZfUC7qo4pURNhyMHZ62RQ"] as? String {
                 return (!cacheExtra.allKeys.isEmpty && model == deviceModel && build == iosBuild, "\(cacheExtra.allKeys.isEmpty ? "empty CacheExtra;" : "Cachextra exists;") \(model != deviceModel ? "device model key doesn't match device;" : "device model key matches device") \(build != iosBuild ? "iOS version key doesnt match device's" : "iOS version key matches device's")")
@@ -372,7 +372,7 @@ struct EditorView: View {
             mg = [:]
             status = "Failed to load mobilegestalt: \(error). Reopen the page to try again."
         }
-        result = validate(mg)
+        let result = validate(mg)
         valid = result.ok
         if !valid {
             status = "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server."
@@ -407,7 +407,7 @@ struct EditorView: View {
         do {
             if let backup1 = try NSMutableDictionary(contentsOf: ogmgurl),
                 let backup2 = try NSMutableDictionary(contentsOf: secondBackupURL) {
-                let result = validate(backup1, file: ogmgurl)
+                var result = validate(backup1, file: ogmgurl)
                 guard result.ok else {
                     return (false, "backup at path \(ogmgurl.path) is invalid. Open Backup Manager and open your original backup from files")
                 }
@@ -463,14 +463,14 @@ struct EditorView: View {
 
     private func revert() {
         do {
-            let result = findBackup()
+            var result = findBackups()
             if result.ok {
                 result = validateBackups()
                 backupValid = result.ok
                 if result.ok {
                     result = laramgr.shared.lara_overwritefile(
                         target: path,
-                        source: ogmgurl
+                        source: ogmgurl.path
                     )
                     if result.ok {
                         alert = "Reverted MobileGestalt from backup, respring to see changes."
@@ -526,7 +526,8 @@ struct EditorView: View {
                     }
                 }
                 
-                valid = validate(mg)
+                let result = validate(mg)
+                valid = result.ok
             }
         )
     }
@@ -552,7 +553,8 @@ struct EditorView: View {
                     }
                 }
                 
-                valid = validate(mg)
+                let result = validate(mg)
+                valid = result.ok
             }
         )
     }
