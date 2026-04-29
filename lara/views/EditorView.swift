@@ -188,19 +188,19 @@ struct EditorView: View {
                     NavigationLink("Backup Manager") {
                         List {
                             Section {
-                            //     HStack {
-                            //         Text("Backups Status")
-                            //         Spacer()
-                            //         if backupValid == true {
-                            //             Text("valid!")
-                            //                 .monospaced(true)
-                            //                 .foregroundColor(.green)
-                            //         } else {
-                            //             Text("invalid.")
-                            //                 .monospaced(true)
-                            //                 .foregroundColor(.orange)
-                            //         }
-                            //     }
+                                HStack {
+                                    Text("Backups Status")
+                                    Spacer()
+                                    if backupValid == true {
+                                        Text("valid!")
+                                            .monospaced(true)
+                                            .foregroundColor(.green)
+                                    } else {
+                                        Text("invalid.")
+                                            .monospaced(true)
+                                            .foregroundColor(.orange)
+                                    }
+                                }
                             //     Button() {
                             //         var result = findBackups()
                             //         if result.ok {
