@@ -44,28 +44,25 @@ struct EditorView: View {
         }
     }
     
-    private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+    private let path = "/var/mobile/Documents/mbg.plist" // "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let ogmgurl: URL
     let os = ProcessInfo().operatingSystemVersion
     private let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
     private let fm = FileManager.default
 
     init() {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .private let path = userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         let sysurl = URL(fileURLWithPath: path)
         do {
             _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
         } catch {
             _mg = State(initialValue: [:])
-            _status = State(initialValue: "Failed to copy MobileGestalt: \(error)")
         }
         guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
-            _status = State(initialValue: "Failed to get dictionaries from MobileGestalt. Reopen the page.")
             return
         }
         guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
-            _status = State(initialValue: "Failed to get SubType from MobileGestalt. Reopen the page.")
             return
         }
         _selectedSubType = State(initialValue: subType)
@@ -165,7 +162,7 @@ struct EditorView: View {
                 }
 
                 Section {
-                    NavigationLink("Backup Manager") {
+                    NavigationLink {
                         List {
                             Section {
                                 HStack {
@@ -197,6 +194,18 @@ struct EditorView: View {
                                 Text("Backup Manager")
                             } footer: {
                                 Text("You can upload your own backup from files if your current backups are invalid or not the true original. Be aware that this overrides your current backups. This cannot be restored.")
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text("Backup Manager")
+                            Spacer()
+                            if backupValid {
+                                Image(systemName: "checkmark.circle")
+                                    .foregroundColor(.green)
+                            } else {
+                                Image(systemName: "xmark.circle")
+                                    .foregroundColor(.red)
                             }
                         }
                     }
@@ -259,21 +268,25 @@ struct EditorView: View {
             }
             .alert(firstLoad ? "Welcome" : "No Backup Found", isPresented: .constant(backupFound == false)) {
                 Button("Load from system") {
-                    do {
-                        try fm.copyItem(at: URL(fileURLWithPath: path), to: ogmgurl)
-                        if !(try fm.contentsOfDirectory(atPath: "/var/mobile")).contains(".lara") {
-                            try fm.createDirectory(atPath: "/var/mobile/.lara", withIntermediateDirectories: true)
+                    if valid {
+                        do {
+                            try fm.copyItem(at: URL(fileURLWithPath: path), to: ogmgurl)
+                            if !(try fm.contentsOfDirectory(atPath: "/var/mobile")).contains(".lara") {
+                                try fm.createDirectory(atPath: "/var/mobile/.lara", withIntermediateDirectories: true)
+                            }
+                            try fm.copyItem(at: URL(fileURLWithPath: path), to: secondBackupURL)
+                            backupFound = true
+                            // we can just set backupValid to true as the original mbg is already checked in init() which was just ran
+                            backupValid = true
+                            mgr.logmsg("(mbg) Loading backups from system...\n(mbg) success!")
+                            status = "Successfully backed up MobileGestalt from system! It's highly recommended to create an ONLINE BACKUP aswell. To do so, go to lara's documents folder and save ogmobilegestalt.plist somewhere safe in the cloud."
+                        } catch {
+                            backupFound = true
+                            mgr.logmsg("(mbg) Loading backups from system...\n(mbg) failed: \(error)")
+                            status = "Failed to load backup from system: \(error). Reopen the page to retry"
                         }
-                        try fm.copyItem(at: URL(fileURLWithPath: path), to: secondBackupURL)
-                        backupFound = true
-                        // we can just set backupValid to true as the original mbg is already checked in init() which was just ran
-                        backupValid = true
-                        mgr.logmsg("(mbg) Loading backups from system...\n(mbg) success!")
-                        status = "Successfully backed up MobileGestalt from system! It's highly recommended to create an ONLINE BACKUP aswell. To do so, go to lara's documents folder and save ogmobilegestalt.plist somewhere safe in the cloud."
-                    } catch {
-                        backupFound = true
-                        mgr.logmsg("(mbg) Loading backups from system...\n(mbg) failed: \(error)")
-                        status = "Failed to load backup from system: \(error). Reopen the page to retry"
+                    } else {
+
                     }
                 }
                 Button("Load from files") {
@@ -452,16 +465,20 @@ struct EditorView: View {
     private func validateBackups() -> (ok: Bool, message: String) {
         var backups: [URL: NSMutableDictionary] = [ogmgurl: [:], secondBackupURL: [:]]
         do {
+            var results = (ok: true, message: "")
             for backupURL in backups.keys {
                 if let backupDict = try NSMutableDictionary(contentsOf: backupURL) {
                     backups[backupURL] = backupDict
                     let result = validate(backupDict, file: backupURL)
                     guard result.ok else {
-                        return (false, "backup at path \(backupURL.path) is invalid:\n\n\(result.message)\n\nOpen Backup Manager and open your original backup from files")
+                        results.ok, results.message = false, results.message + "backup at path \(backupURL.path) is invalid:\n\n\(result.message)\n\n")
                     }
                 } else {
-                    return (false, "backup at path \(backupURL.path) contains invalid plist. Open Backup Manager and open your original backup from files")
+                    results.ok, results.message = false, results.message + "backup at path \(backupURL.path) contains invalid plist."
                 }
+            }
+            if !results.ok {
+                results.message = results.message + "Open Backup Manager and open your original backup from files if you have it. Else contact support in the lara discord server"
             }
             if backups[ogmgurl] != backups[secondBackupURL] {
                 return (false, "backups don't match. If you've modified \(ogmgurl.path) or \(secondBackupURL.path), open Backup Manager and open your original backup from files. Else, contact support.")
@@ -469,7 +486,7 @@ struct EditorView: View {
         } catch {
             return (false, "failed to validate backup: \(error)\nReopen the page or contact support.")
         }
-        return (true, "backups are valid")
+        return (true, "backups are valid!")
     }
 
     private func apply() {
