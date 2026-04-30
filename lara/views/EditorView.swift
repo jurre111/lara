@@ -280,36 +280,7 @@ struct EditorView: View {
                     firstMGLoad = false
                 } else {
                     firstLoad = false
-                }.alert(firstLoad ? "Welcome" : "No Backup Found", isPresented: .constant(backupFound == false)) {
-                Button("Load from system") {
-                    do {
-                        try fm.copyItem(at: URL(fileURLWithPath: path), to: ogmgurl)
-                        if !(try fm.contentsOfDirectory(atPath: "/var/mobile")).contains(".lara") {
-                            try fm.createDirectory(atPath: "/var/mobile/.lara", withIntermediateDirectories: true)
-                        }
-                        try fm.copyItem(at: URL(fileURLWithPath: path), to: secondBackupURL)
-                        backupFound = true
-                        // we can just set backupValid to true as the original mbg is already checked in init() which was just ran
-                        backupValid = true
-                        mgr.logmsg("(mbg) Loading backups from system...\n(mbg) success!")
-                        status = "Successfully backed up MobileGestalt from system! It's highly recommended to create an ONLINE BACKUP aswell. To do so, go to lara's documents folder and save ogmobilegestalt.plist somewhere safe in the cloud."
-                    } catch {
-                        backupFound = true
-                        mgr.logmsg("(mbg) Loading backups from system...\n(mbg) failed: \(error)")
-                        status = "Failed to load backup from system: \(error). Reopen the page to retry"
-                    }
                 }
-                Button("Load from files") {
-                    mgr.logmsg("(mbg) Uploading backup from files...")
-                    showimporter = true
-                }
-            } message: {
-                if !firstLoad {
-                    Text("In both the application documents and /var/mobile/.lara no backup of your MobileGestalt was found. You have to load a new one to use MobileGestalt tweaks safely. Do you want to load a new backup from the system or from your own backup file? Loading a backup from the system will backup the current MobileGestalt as-is, which does NOT necessarily mean it is your original MobileGestalt file. If you know your current MobileGestalt is not the true original file, please open your true original MobileGestalt from files.\n\nIf you don't understand this popup, load a backup from files if you have one or contact support in the lara discord server.")
-                } else {
-                    Text("Welcome! To ensure safe usage of the MobileGestalt editing feature, backups are auto-saved. Because it's your first time using MobileGestalt tweaks in lara, you don't have a backup saved at the expected location yet. Lara can automatically load the current MobileGestalt file from the system. If you're sure that your current MobileGestalt is the true original or want to make a backup of it in this state, click load from system.\n\nIf your current MobileGestalt is not the original, upload the true original from files if you have it. If you don't have the original anywhere, ping @jurre6835 in the lara discord server.")
-                }
-            }
                 load()
                 checkBackups()
                 mgr.logmsg("(mbg) ogsubtype: \(ogSubType); current subtype: \(selectedSubType)")
