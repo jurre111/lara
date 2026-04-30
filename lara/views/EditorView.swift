@@ -360,16 +360,19 @@ struct EditorView: View {
     private func load() {
         mgr.logmsg("(mbg) Loading MobileGestalt from system...")
         do {
-            mg = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
-            mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) success!")
+            let dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
+            let result = validate(dict)
+            valid = result.ok
+            if valid {
+                mg = dict
+                mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) success!")
+            } else {
+                mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) invalid: \(result.message)")
+                status = "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server."
+            }
         } catch {
             mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) failed: \(error)")
             status = "Failed to load mobilegestalt: \(error). Reopen the page to try again."
-        }
-        let result = validate(mg)
-        valid = result.ok
-        if !valid {
-            status = "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server."
         }
     }
 
