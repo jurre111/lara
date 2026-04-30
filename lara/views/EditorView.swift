@@ -10,6 +10,7 @@
 
 import SwiftUI
 import Foundation
+import UniformTypeIdentifiers
 
 struct EditorView: View {
     @ObservedObject private var mgr = laramgr.shared
