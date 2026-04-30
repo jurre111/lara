@@ -57,7 +57,7 @@ struct EditorView: View {
         do {
             _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
         } catch {
-            _mg = State(initialValue: [:])CacheExtra
+            _mg = State(initialValue: [:])
         }
         guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
             return
@@ -475,7 +475,7 @@ struct EditorView: View {
                         results.message = results.message + "backup at path \(backupURL.path) is invalid:\n\n\(result.message)\n\n"
                     }
                 } else {
-                    results.ok = falsealse, 
+                    results.ok = false
                     results.message = results.message + "backup at path \(backupURL.path) contains invalid plist."
                 }
             }
