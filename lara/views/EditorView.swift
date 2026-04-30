@@ -39,7 +39,8 @@ struct EditorView: View {
     init() {
         // turns out init() is needed, else the picker shows up empty. We can't just run load() so we just run a simple version of load and let load() run once the view is initialized
         do {
-            let dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path))
+            let dict: NSMutableDictionary
+            dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path))
             guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary,
                 let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary,
                 let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
