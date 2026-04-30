@@ -325,7 +325,7 @@ struct EditorView: View {
                 data = try Data(contentsOf: fileURL)
             } else {
                 data = try PropertyListSerialization.data(
-                    fromPropertyList: mg,
+                    fromPropertyList: dict,
                     format: .binary,
                     options: 0
                 )
