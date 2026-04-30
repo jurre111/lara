@@ -168,7 +168,8 @@ struct EditorView: View {
                                     mgr.logmsg("(mbg) Uploading backup from files...")
                                     showimporter = true
                                 } label: {
-                                    Text("Import Backup from files")
+                                    Text("Import backup from files")
+                                        .foregroundColor(.red)
                                 }
                             } header: {
                                 Text("Backup Manager")
