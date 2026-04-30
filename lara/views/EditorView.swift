@@ -18,7 +18,6 @@ struct EditorView: View {
     @State private var status: String?
     @State private var alert: String?
     @State private var valid: Bool = true
-    @State private var selectedSubType: Int = -1
     @State private var showimporter: Bool = false
 
     // backup stuff
@@ -27,6 +26,7 @@ struct EditorView: View {
     @State private var firstLoad: Bool = true
 
     @AppStorage("ogSubType") private var ogSubType: Int = -1
+    @State private var selectedSubType: Int = UserDefaults.standard.integer(forKey: "ogSubType")
     @AppStorage("firstMGLoad") private var firstMGLoad: Bool = true
 
     
@@ -59,18 +59,13 @@ struct EditorView: View {
             List {
                 Section {
                     HStack {
-                        Text("Dynamic Island")
-                        
-                        Spacer()
-                        
-                        Picker("", selection: $selectedSubType) {
+                        Picker("Dynamic Island", selection: $selectedSubType) {
                             Text("Original (\(String(ogSubType)))").tag(ogSubType)
                             ForEach(SubType.allCases.filter { $0.rawValue != ogSubType }) { subtype in
                                 Text(subtype.displayName).tag(subtype.rawValue)
                             }
                         }
                         .pickerStyle(.menu)
-                        .id(ogSubType)
                     }
                     Toggle("Action Button", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
                         .disabled(requiresVersion(17))
@@ -361,12 +356,12 @@ struct EditorView: View {
                     status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
                     return
                 }
-                mgr.logmsg("\n(mbg) Loaded CacheExtra")
+                mgr.logmsg("(mbg) Loaded CacheExtra")
                 guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
                     status = "Failed to get SubType from MobileGestalt. Reopen the page to try again."
                     return
                 }
-                mgr.logmsg("\n(mbg) Loaded ArtWorkDeviceSubType")
+                mgr.logmsg("(mbg) Loaded ArtWorkDeviceSubType")
                 selectedSubType = subType
                 // This only happens on the first load
                 if ogSubType == -1 {
