@@ -107,7 +107,11 @@ struct EditorView: View {
             List {
                 Section {
                     HStack {
-                        Picker("Dynamic Island", selection: $selectedSubType) {
+                        Text("Dynamic Island")
+                        
+                        Spacer()
+                        
+                        Picker("", selection: $selectedSubType) {
                             Text("Original (\(String(ogSubType)))").tag(ogSubType)
                             ForEach(SubType.allCases.filter { $0.rawValue != ogSubType }) { subtype in
                                 Text(subtype.displayName).tag(subtype.rawValue)
