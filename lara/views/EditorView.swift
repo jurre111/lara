@@ -14,7 +14,7 @@ import UniformTypeIdentifiers
 
 struct EditorView: View {
     @ObservedObject private var mgr = laramgr.shared
-    @State private var mg: NSMutableDictionary
+    @State private var mg: NSMutableDictionary = [:]
     @State private var status: String?
     @State private var alert: String?
     @State private var valid: Bool = true
@@ -26,9 +26,15 @@ struct EditorView: View {
     @State private var backupValid: Bool?
     @State private var firstLoad: Bool = true
 
-
     @AppStorage("ogSubType") private var ogSubType: Int = -1
     @AppStorage("firstMGLoad") private var firstMGLoad: Bool = true
+
+    
+    private let path = "/var/mobile/Documents/mbg.plist" // "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+    private let ogmgurl: URL
+    let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
+    let os = ProcessInfo().operatingSystemVersion
+    let fm = FileManager.default
 
     enum SubType: Int, CaseIterable, Identifiable {
         case iPhone14Pro = 2556
@@ -45,44 +51,6 @@ struct EditorView: View {
             case .iPhone16Pro: return "iOS 18+:\n16 Pro (2622)"
             case .iPhone16ProMax: return "iOS 18+:\n16 Pro Max (2868)"
             }
-        }
-    }
-    
-    private let path = "/var/mobile/Documents/mbg.plist" // "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
-    private let ogmgurl: URL
-    let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
-    let os = ProcessInfo().operatingSystemVersion
-    let fm = FileManager.default
-
-    init() {
-        let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
-        do {
-            _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
-            mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) success!")
-        } catch {
-            _mg = State(initialValue: [:])
-            mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) failed: \(error)")
-            _status = State(initialValue: "Failed to load mobilegestalt: \(error). Reopen the page to try again.")
-        }
-        var result = validate(mg)
-        mgr.logmsg("(mbg) Validating MobileGestalt...\n(mbg) \(result.message)")
-        _valid = State(initialValue: result.ok)
-        if !valid {
-            _status = State(initialValue: "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server.")
-        }
-        guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
-            _status = State(initialValue: "Failed to get dictionaries from MobileGestalt. Reopen the page to try again.")
-            return
-        }
-        guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
-            _status = State(initialValue: "Failed to get SubType from MobileGestalt. Reopen the page to try again.")
-            return
-        }
-        _selectedSubType = State(initialValue: subType)
-        // This only happens on the first load
-        if ogSubType == -1 {
-            ogSubType = subType
         }
     }
 
@@ -192,20 +160,7 @@ struct EditorView: View {
                                     }
                                 }
                                 Button() {
-                                    var result = findBackups()
-                                    mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
-                                    if result.ok {
-                                        result = validateBackups()
-                                        mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
-                                        backupValid = result.ok
-                                        if !result.ok {
-                                            status = "Validating backups...\n\n\(result.message)"
-                                        }
-                                    } else {
-                                        if backupFound != false {
-                                            status = "Finding backups...\n\n\(result.message)"
-                                        }
-                                    }
+                                    checkBackups()
                                 } label: {
                                     Text("Reload")
                                 }
@@ -344,22 +299,23 @@ struct EditorView: View {
                 } else {
                     firstLoad = false
                 }
-
-                var result = findBackups()
-                mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
-                backupFound = result.ok
-                if result.ok {
-                    result = validateBackups()
-                    mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
-                    backupValid = result.ok
-                    if !result.ok {
-                        status = "Validating backups...\n\n\(result.message)"
-                    }
-                } else {
-                    if backupFound != false {
-                        status = "Finding backups...\n\n\(result.message)"
-                    }
+                let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
+                load()
+                guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
+                    status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
+                    return
                 }
+                guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
+                    status = "Failed to get SubType from MobileGestalt. Reopen the page to try again."
+                    return
+                }
+                selectedSubType = subType
+                // This only happens on the first load
+                if ogSubType == -1 {
+                    ogSubType = subType
+                }
+                checkBackups()
             }
         }
     }
@@ -407,14 +363,33 @@ struct EditorView: View {
         mgr.logmsg("(mbg) Loading MobileGestalt from system...")
         do {
             mg = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
+            mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) success!")
         } catch {
-            mg = [:]
+            mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) failed: \(error)")
             status = "Failed to load mobilegestalt: \(error). Reopen the page to try again."
         }
         let result = validate(mg)
         valid = result.ok
         if !valid {
             status = "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server."
+        }
+    }
+
+    private func checkBackups() {
+        var result = findBackups()
+        mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
+        backupFound = result.ok
+        if result.ok {
+            result = validateBackups()
+            mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
+            backupValid = result.ok
+            if !result.ok {
+                status = "Validating backups...\n\n\(result.message)"
+            }
+        } else {
+            if backupFound != false {
+                status = "Finding backups...\n\n\(result.message)"
+            }
         }
     }
 
