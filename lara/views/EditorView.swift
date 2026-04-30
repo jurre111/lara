@@ -300,19 +300,6 @@ struct EditorView: View {
                     firstLoad = false
                 }
                 load()
-                guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
-                    status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
-                    return
-                }
-                guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
-                    status = "Failed to get SubType from MobileGestalt. Reopen the page to try again."
-                    return
-                }
-                selectedSubType = subType
-                // This only happens on the first load
-                if ogSubType == -1 {
-                    ogSubType = subType
-                }
                 checkBackups()
             }
         }
@@ -364,8 +351,23 @@ struct EditorView: View {
             let result = validate(dict)
             valid = result.ok
             if valid {
-                mg = dict
                 mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) success!")
+                mg = dict
+                guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
+                    status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
+                    return
+                }
+                mgr.logmsg("\n(mbg) Loaded CacheExtra")
+                guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
+                    status = "Failed to get SubType from MobileGestalt. Reopen the page to try again."
+                    return
+                }
+                mgr.logmsg("\n(mbg) Loaded ArtWorkDeviceSubType")
+                selectedSubType = subType
+                // This only happens on the first load
+                if ogSubType == -1 {
+                    ogSubType = subType
+                }
             } else {
                 mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) invalid: \(result.message)")
                 status = "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server."
