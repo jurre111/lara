@@ -70,6 +70,7 @@ struct EditorView: View {
                             }
                         }
                         .pickerStyle(.menu)
+                        .id(ogSubType)
                     }
                     Toggle("Action Button", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
                         .disabled(requiresVersion(17))
@@ -346,7 +347,6 @@ struct EditorView: View {
     }
 
     private func load() {
-        mgr.logmsg("(mbg) Loading MobileGestalt from system...")
         do {
             let dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
             let result = validate(dict)
