@@ -299,8 +299,6 @@ struct EditorView: View {
                 } else {
                     firstLoad = false
                 }
-                let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
                 load()
                 guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
                     status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
