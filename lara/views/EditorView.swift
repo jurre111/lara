@@ -240,6 +240,9 @@ struct EditorView: View {
                 Button("Load from system") {
                     do {
                         try fm.copyItem(at: URL(fileURLWithPath: path), to: ogmgurl)
+                        if !(try fm.contentsOfDirectory(atPath: "/var/mobile")).contains(".lara") {
+                            try fm.createDirectory(atPath: "/var/mobile/.lara", withIntermediateDirectories: true)
+                        }
                         try fm.copyItem(at: URL(fileURLWithPath: path), to: secondBackupURL)
                         backupFound = true
                         // we can just set backupValid to true as the original mbg is already checked in init() which was just ran
