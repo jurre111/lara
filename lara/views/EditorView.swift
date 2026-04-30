@@ -19,6 +19,8 @@ struct EditorView: View {
     @State private var valid: Bool = true
     @AppStorage("ogSubType") private var ogSubType: Int = -1
     @State private var selectedSubType: Int = -1
+    @State private var backupFound: Bool?
+    @State private var backupValid: Bool?
 
     enum SubType: Int, CaseIterable, Identifiable {
         case iPhone14Pro = 2556
