@@ -14,7 +14,7 @@ import UniformTypeIdentifiers
 
 struct EditorView: View {
     @ObservedObject private var mgr = laramgr.shared
-    @State private var mg: NSMutableDictionary = [:]
+    @State private var mg: NSMutableDictionary
     @State private var status: String?
     @State private var alert: String?
     @State private var valid: Bool = true
@@ -31,32 +31,58 @@ struct EditorView: View {
 
     
     private let path = "/var/mobile/Documents/mbg.plist" // "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
-    private var ogmgurl = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("ogmobilegestalt.plist")
+    private let ogmgurl: URL
     private let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
     private let os = ProcessInfo().operatingSystemVersion
     private let fm = FileManager.default
 
     init() {
-        // turns out init() is needed, else the picker shows up empty. We can't just run load() so we just run a simple version of load and let load() run once the view is initialized
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
+        let sysurl = URL(fileURLWithPath: path)
         do {
-            if let dict = NSMutableDictionary(contentsOf: URL(fileURLWithPath: path)) {
-                guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary,
-                    let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary,
-                    let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
-                    status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
-                    return
-                }
-                _selectedSubType = State(initialValue: subType)
-                if ogSubType == -1 {
-                    ogSubType = subType
-                }
-            } else {
-                status = "Failed to load MobileGestalt data."
-            }
+            _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
         } catch {
-            status = "Error: \(error)"
+            _mg = State(initialValue: [:])
+            _status = State(initialValue: "Failed to copy MobileGestalt: \(error)")
         }
+        guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
+            _status = State(initialValue: "Failed to get dictionaries from MobileGestalt. Reopen the page.")
+            return
+        }
+        guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
+            _status = State(initialValue: "Failed to get SubType from MobileGestalt. Reopen the page.")
+            return
+        }
+        _selectedSubType = State(initialValue: subType)
+        // This only happens on the first load
+        if ogSubType == -1 {
+            ogSubType = subType
+        }
+
     }
+
+    // init() {
+    //     // turns out init() is needed, else the picker shows up empty. We can't just run load() so we just run a simple version of load and let load() run once the view is initialized
+    //     do {
+    //         if let dict = NSMutableDictionary(contentsOf: URL(fileURLWithPath: path)) {
+    //             guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary,
+    //                 let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary,
+    //                 let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
+    //                 status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
+    //                 return
+    //             }
+    //             _selectedSubType = State(initialValue: subType)
+    //             if ogSubType == -1 {
+    //                 ogSubType = subType
+    //             }
+    //         } else {
+    //             status = "Failed to load MobileGestalt data."
+    //         }
+    //     } catch {
+    //         status = "Error: \(error)"
+    //     }
+    // }
 
     enum SubType: Int, CaseIterable, Identifiable {
         case iPhone14Pro = 2556
