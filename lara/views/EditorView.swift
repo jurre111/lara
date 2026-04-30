@@ -50,6 +50,8 @@ struct EditorView: View {
                 if ogSubType == -1 {
                     ogSubType = subType
                 }
+            } else {
+                status = "Failed to load MobileGestalt data."
             }
         } catch {
             status = "Error: \(error)"
