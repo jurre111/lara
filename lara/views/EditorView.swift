@@ -51,13 +51,13 @@ struct EditorView: View {
     private let fm = FileManager.default
 
     init() {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .private let path = userDomainMask)[0]
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         let sysurl = URL(fileURLWithPath: path)
         do {
             _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
         } catch {
-            _mg = State(initialValue: [:])
+            _mg = State(initialValue: [:])CacheExtra
         }
         guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
             return
@@ -471,10 +471,12 @@ struct EditorView: View {
                     backups[backupURL] = backupDict
                     let result = validate(backupDict, file: backupURL)
                     guard result.ok else {
-                        results.ok, results.message = false, results.message + "backup at path \(backupURL.path) is invalid:\n\n\(result.message)\n\n")
+                        results.ok = false
+                        results.message = results.message + "backup at path \(backupURL.path) is invalid:\n\n\(result.message)\n\n"
                     }
                 } else {
-                    results.ok, results.message = false, results.message + "backup at path \(backupURL.path) contains invalid plist."
+                    results.ok = falsealse, 
+                    results.message = results.message + "backup at path \(backupURL.path) contains invalid plist."
                 }
             }
             if !results.ok {
