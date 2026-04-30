@@ -470,7 +470,7 @@ struct EditorView: View {
                 if let backupDict = try NSMutableDictionary(contentsOf: backupURL) {
                     backups[backupURL] = backupDict
                     let result = validate(backupDict, file: backupURL)
-                    guard result.ok else {
+                    if !result.ok {
                         results.ok = false
                         results.message = results.message + "backup at path \(backupURL.path) is invalid:\n\n\(result.message)\n\n"
                     }
