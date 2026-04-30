@@ -55,11 +55,6 @@ struct EditorView: View {
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         let sysurl = URL(fileURLWithPath: path)
         do {
-            if !FileManager.default.fileExists(atPath: ogmgurl.path) {
-                try FileManager.default.copyItem(at: sysurl, to: ogmgurl)
-            }
-            chmod(ogmgurl.path, 0o644)
-            
             _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
         } catch {
             _mg = State(initialValue: [:])
