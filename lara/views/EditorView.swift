@@ -200,7 +200,7 @@ struct EditorView: View {
                         HStack {
                             Text("Backup Manager")
                             Spacer()
-                            if backupValid {
+                            if backupValid == true {
                                 Image(systemName: "checkmark.circle")
                                     .foregroundColor(.green)
                             } else {
