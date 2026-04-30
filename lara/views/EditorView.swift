@@ -298,6 +298,9 @@ struct EditorView: View {
                         let validcheck = validate(uploaded, file: importurl)
                         mgr.logmsg("(mbg) Loading uploaded backup...\n(mbg) Validating loaded backup...\n(mbg) \(validcheck.message)")
                         if validcheck.ok {
+                            if !(try fm.contentsOfDirectory(atPath: "/var/mobile")).contains(".lara") {
+                                try fm.createDirectory(atPath: "/var/mobile/.lara", withIntermediateDirectories: true)
+                            }
                             for backup in [ogmgurl, secondBackupURL] {
                                 if fm.fileExists(atPath: backup.path) {
                                     try fm.removeItem(at: backup)
