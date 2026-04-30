@@ -18,22 +18,36 @@ struct EditorView: View {
     @State private var status: String?
     @State private var alert: String?
     @State private var valid: Bool = true
-    @State private var showimporter: Bool = false
+    @AppStorage("ogSubType") private var ogSubType: Int = -1
     @State private var selectedSubType: Int = -1
-
-    // backup stuff
     @State private var backupFound: Bool?
     @State private var backupValid: Bool?
     @State private var firstLoad: Bool = true
-
-    @AppStorage("ogSubType") private var ogSubType: Int = -1
+    @State private var showimporter: Bool = false
     @AppStorage("firstMGLoad") private var firstMGLoad: Bool = true
 
+    enum SubType: Int, CaseIterable, Identifiable {
+        case iPhone14Pro = 2556
+        case iPhone14ProMax = 2796
+        case iPhone16Pro = 2622
+        case iPhone16ProMax = 2868
+        // X gestures for SE?
+
+        var id: Int { self.rawValue }
+        var displayName: String {
+            switch self {
+            case .iPhone14Pro: return "14 Pro (2556)"
+            case .iPhone14ProMax: return "14 Pro Max (2796)"
+            case .iPhone16Pro: return "iOS 18+:\n16 Pro (2622)"
+            case .iPhone16ProMax: return "iOS 18+:\n16 Pro Max (2868)"
+            }
+        }
+    }
     
-    private let path = "/var/mobile/Documents/mbg.plist" // "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
+    private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let ogmgurl: URL
+    let os = ProcessInfo().operatingSystemVersion
     private let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
-    private let os = ProcessInfo().operatingSystemVersion
     private let fm = FileManager.default
 
     init() {
@@ -41,6 +55,11 @@ struct EditorView: View {
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         let sysurl = URL(fileURLWithPath: path)
         do {
+            if !FileManager.default.fileExists(atPath: ogmgurl.path) {
+                try FileManager.default.copyItem(at: sysurl, to: ogmgurl)
+            }
+            chmod(ogmgurl.path, 0o644)
+            
             _mg = State(initialValue: try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ()))
         } catch {
             _mg = State(initialValue: [:])
@@ -62,59 +81,23 @@ struct EditorView: View {
 
     }
 
-    // init() {
-    //     // turns out init() is needed, else the picker shows up empty. We can't just run load() so we just run a simple version of load and let load() run once the view is initialized
-    //     do {
-    //         if let dict = NSMutableDictionary(contentsOf: URL(fileURLWithPath: path)) {
-    //             guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary,
-    //                 let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary,
-    //                 let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
-    //                 status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
-    //                 return
-    //             }
-    //             _selectedSubType = State(initialValue: subType)
-    //             if ogSubType == -1 {
-    //                 ogSubType = subType
-    //             }
-    //         } else {
-    //             status = "Failed to load MobileGestalt data."
-    //         }
-    //     } catch {
-    //         status = "Error: \(error)"
-    //     }
-    // }
-
-    enum SubType: Int, CaseIterable, Identifiable {
-        case iPhone14Pro = 2556
-        case iPhone14ProMax = 2796
-        case iPhone16Pro = 2622
-        case iPhone16ProMax = 2868
-        // X gestures for SE?
-
-        var id: Int { self.rawValue }
-        var displayName: String {
-            switch self {
-            case .iPhone14Pro: return "14 Pro (2556)"
-            case .iPhone14ProMax: return "14 Pro Max (2796)"
-            case .iPhone16Pro: return "iOS 18+:\n16 Pro (2622)"
-            case .iPhone16ProMax: return "iOS 18+:\n16 Pro Max (2868)"
-            }
-        }
-    }
-
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                        HStack {
-                            Picker("Dynamic Island", selection: $selectedSubType) {
-                                Text("Original (\(String(ogSubType)))").tag(ogSubType)
-                                ForEach(SubType.allCases.filter { $0.rawValue != ogSubType }) { subtype in
-                                    Text(subtype.displayName).tag(subtype.rawValue)
-                                }
+                    HStack {
+                        Text("Dynamic Island")
+                        
+                        Spacer()
+                        
+                        Picker("", selection: $selectedSubType) {
+                            Text("Original (\(String(ogSubType)))").tag(ogSubType)
+                            ForEach(SubType.allCases.filter { $0.rawValue != ogSubType }) { subtype in
+                                Text(subtype.displayName).tag(subtype.rawValue)
                             }
-                            .pickerStyle(.menu)
                         }
+                        .pickerStyle(.menu)
+                    }
                     Toggle("Action Button", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
                         .disabled(requiresVersion(17))
                     Toggle("Allow installing iPadOS apps", isOn: mgkeybinding(["9MZ5AdH43csAUajl/dU+IQ"], type: [Int].self, default: [1], enable: [1, 2]))
@@ -143,7 +126,7 @@ struct EditorView: View {
                 } header: {
                     Text("MobileGestalt")
                 } footer: {
-                    Text("Note: some tweaks may not work or cause instability.")
+                    Text("Note: some tweaks may not work or cause instability.\nWARNING: Never enable features your device doesn't support.")
                 }
                 Section {
                     let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary
@@ -183,7 +166,7 @@ struct EditorView: View {
                 } header: {
                     Text("Apply")
                 } footer: {
-                    Text("Use at your own risk.")
+                    Text("Use at your own risk. Always keep a backup of your MobileGestalt somewhere safe.")
                 }
 
                 Section {
@@ -500,7 +483,7 @@ struct EditorView: View {
                 }
                 oPeik["ArtworkDeviceSubType"] = selectedSubType
             } else {
-                status = "Selected SubType is -1? Reopen the page."
+                status = "Selected SubType is -1? Reload the page."
                 return
             }
             let data = try PropertyListSerialization.data(
@@ -515,14 +498,14 @@ struct EditorView: View {
             )
             
             if result.ok {
-                mgr.logmsg("(mbg) overwrote MobileGestalt at \(path)")
+                mgr.logmsg("overwrote MobileGestalt at \(path)")
                 alert = "Applied modified mobilegestalt, respring to see changes."
             } else {
                 status = "overwrite failed: \(result.message)"
             }
             
         } catch {
-            status = "serialization failed: \(error.localizedDescription). Reopen the page or contact support."
+            status = "serialization failed: \(error.localizedDescription)"
         }
     }
 
@@ -591,11 +574,7 @@ struct EditorView: View {
                     }
                 }
                 
-                let result = validate(mg)
-                valid = result.ok
-                if !valid {
-                    status = "MobileGestalt is not valid: \n\n\(result.message)\n\nClick reload from plist or contact support in the lara discord server."
-                }
+                valid = validate(mg).ok
             }
         )
     }
@@ -621,11 +600,7 @@ struct EditorView: View {
                     }
                 }
                 
-                let result = validate(mg)
-                valid = result.ok
-                if !valid {
-                    status = "MobileGestalt is not valid: \n\n\(result.message)\n\nClick reload from plist or contact support in the lara discord server."
-                }
+                valid = validate(mg).ok
             }
         )
     }
