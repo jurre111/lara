@@ -19,6 +19,7 @@ struct EditorView: View {
     @State private var alert: String?
     @State private var valid: Bool = true
     @State private var showimporter: Bool = false
+    @State private var selectedSubType: Int = -1
 
     // backup stuff
     @State private var backupFound: Bool?
@@ -26,7 +27,6 @@ struct EditorView: View {
     @State private var firstLoad: Bool = true
 
     @AppStorage("ogSubType") private var ogSubType: Int = -1
-    @State private var selectedSubType: Int = UserDefaults.standard.integer(forKey: "ogSubType")
     @AppStorage("firstMGLoad") private var firstMGLoad: Bool = true
 
     
@@ -35,6 +35,10 @@ struct EditorView: View {
     private let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
     private let os = ProcessInfo().operatingSystemVersion
     private let fm = FileManager.default
+
+    init() {
+        load()
+    }
 
     enum SubType: Int, CaseIterable, Identifiable {
         case iPhone14Pro = 2556
