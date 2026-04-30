@@ -9,6 +9,7 @@
 // thank you @jurre111
 
 import SwiftUI
+import Foundation
 
 struct EditorView: View {
     @ObservedObject private var mgr = laramgr.shared
@@ -40,6 +41,8 @@ struct EditorView: View {
     private let path = "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
     private let ogmgurl: URL
     let os = ProcessInfo().operatingSystemVersion
+    private let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
+    private let fm = FileManager.default
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -208,17 +211,141 @@ struct EditorView: View {
         }
     }
     
-    private func validate(_ dict: NSMutableDictionary) -> Bool {
-        guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary else { return false }
-        return !cacheExtra.allKeys.isEmpty
+    private func validate(_ dict: NSMutableDictionary, file: URL? = nil) -> (ok: Bool, message: String) {
+        // only way to get device model and iOS build
+        var size: size_t = 0
+        sysctlbyname("hw.machine", nil, &size, nil, 0)
+        var machine = [CChar](repeating: 0, count: size)
+        sysctlbyname("hw.machine", &machine, &size, nil, 0)
+        let deviceModel = String(cString: machine)
+        size = 0
+        sysctlbyname("kern.osversion", nil, &size, nil, 0)
+        var build = [CChar](repeating: 0, count: size)
+        sysctlbyname("kern.osversion", &build, &size, nil, 0)
+        let iosBuild = String(cString: build)
+
+        let data: Data
+        do {
+            if let fileURL = file {
+                data = try Data(contentsOf: fileURL)
+            } else {
+                data = try PropertyListSerialization.data(
+                    fromPropertyList: dict,
+                    format: .binary,
+                    options: 0
+                )
+            }
+            if data.count < 5000 {
+                return (false, "file too small (\(data.count) bytes)")
+            }
+            guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary else { return (false, "missing CacheExtra (!?)") }
+            if let model = cacheExtra["h9jDsbgj7xIVeIQ8S3/X3Q"] as? String,
+                let build = cacheExtra["mZfUC7qo4pURNhyMHZ62RQ"] as? String {
+                return (!cacheExtra.allKeys.isEmpty && model == deviceModel && build == iosBuild, "\(cacheExtra.allKeys.isEmpty ? "empty CacheExtra, " : "Cachextra exists, ")\(model != deviceModel ? "device model key doesn't match device, " : "device model key matches device, ")\(build != iosBuild ? "iOS version key doesnt match device's" : "iOS version key matches device's")")
+            } else {
+                return (false, "missing critical keys")
+            }
+        } catch {
+            return(false, "error while validating MobileGestalt: \(error)")
+        }
     }
 
     private func load() {
         do {
-            mg = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
+            let dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path), error: ())
+            let result = validate(dict)
+            valid = result.ok
+            if valid {
+                mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) success!")
+                mg = dict
+                guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary, let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary else {
+                    status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
+                    return
+                }
+                mgr.logmsg("(mbg) Loaded CacheExtra")
+                guard let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
+                    status = "Failed to get SubType from MobileGestalt. Reopen the page to try again."
+                    return
+                }
+                mgr.logmsg("(mbg) Loaded ArtWorkDeviceSubType")
+                selectedSubType = subType
+                // This only happens on the first load
+                if ogSubType == -1 {
+                    ogSubType = subType
+                }
+            } else {
+                mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) invalid: \(result.message)")
+                status = "MobileGestalt is not valid: \(result.message)\nClick reload from plist or contact support in the lara discord server."
+            }
         } catch {
-            status = "Failed to load mobilegestalt"
+            mgr.logmsg("\n(mbg) Loading MobileGestalt from system...\n(mbg) failed: \(error)")
+            status = "Failed to load mobilegestalt: \(error). Reopen the page to try again."
         }
+    }
+
+    private func checkBackups() {
+        var result = findBackups()
+        mgr.logmsg("(mbg) Looking for backups...\n(mbg) \(result.message)")
+        backupFound = result.ok
+        if result.ok {
+            result = validateBackups()
+            mgr.logmsg("(mbg) Validating backups...\n(mbg) \(result.message)")
+            backupValid = result.ok
+            if !result.ok {
+                status = "Validating backups...\n\n\(result.message)"
+            }
+        } else {
+            if backupFound != false {
+                status = "Finding backups...\n\n\(result.message)"
+            }
+        }
+    }
+
+    private func findBackups() -> (ok: Bool, message: String) {
+        do {
+            if !fm.fileExists(atPath: ogmgurl.path) {
+                if !fm.fileExists(atPath: secondBackupURL.path) {
+                    backupFound = false
+                    return (false, "no backups found")
+                } else {
+                    try fm.copyItem(at: secondBackupURL, to: ogmgurl)
+                    chmod(ogmgurl.path, 0o644)
+                }
+            }
+            if !fm.fileExists(atPath: secondBackupURL.path) {
+                if !(try fm.contentsOfDirectory(atPath: "/var/mobile")).contains(".lara") {
+                    try fm.createDirectory(atPath: "/var/mobile/.lara", withIntermediateDirectories: true)
+                }
+                try fm.copyItem(at: ogmgurl, to: secondBackupURL)
+                chmod(secondBackupURL.path, 0o644)
+            }
+            return (true, "backups found!")
+        } catch {
+            return (false, "failed to check for backups: \(error)\nReopen the page or contact support.") 
+        }
+    }
+
+    private func validateBackups() -> (ok: Bool, message: String) {
+        var backups: [URL: NSMutableDictionary] = [ogmgurl: [:], secondBackupURL: [:]]
+        do {
+            for backupURL in backups.keys {
+                if let backupDict = try NSMutableDictionary(contentsOf: backupURL) {
+                    backups[backupURL] = backupDict
+                    let result = validate(backupDict, file: backupURL)
+                    guard result.ok else {
+                        return (false, "backup at path \(backupURL.path) is invalid:\n\n\(result.message)\n\nOpen Backup Manager and open your original backup from files")
+                    }
+                } else {
+                    return (false, "backup at path \(backupURL.path) contains invalid plist. Open Backup Manager and open your original backup from files")
+                }
+            }
+            if backups[ogmgurl] != backups[secondBackupURL] {
+                return (false, "backups don't match. If you've modified \(ogmgurl.path) or \(secondBackupURL.path), open Backup Manager and open your original backup from files. Else, contact support.")
+            }
+        } catch {
+            return (false, "failed to validate backup: \(error)\nReopen the page or contact support.")
+        }
+        return (true, "backups are valid")
     }
 
     private func apply() {
@@ -255,6 +382,34 @@ struct EditorView: View {
             status = "serialization failed: \(error.localizedDescription)"
         }
     }
+
+    private func revert() {
+        do {
+            var result = findBackups()
+            if result.ok {
+                result = validateBackups()
+                backupValid = result.ok
+                if result.ok {
+                    result = laramgr.shared.lara_overwritefile(
+                        target: path,
+                        source: ogmgurl.path
+                    )
+                    if result.ok {
+                        alert = "Reverted MobileGestalt from backup, respring to see changes."
+                    } else {
+                        status = "Overwriting \(path) failed: \(result.message). Reopen the page or contact support"
+                    }
+                } else {
+                    status = "Validating backups...\n\n\(result.message)"
+                }
+            } else {
+                status = "Finding backups...\n\n\(result.message)"
+            }
+        } catch {
+            status = "Reverting failed: \(error.localizedDescription). Reopen the page or contact support."
+        }
+    }
+
     private func bindingForTrollPad() -> Binding<Bool> {
         // We're going to overwrite DeviceClassNumber but we can't do it via CacheExtra, so we need to do it via CacheData instead
         guard let cacheData = mg["CacheData"] as? NSMutableData,
@@ -293,7 +448,7 @@ struct EditorView: View {
                     }
                 }
                 
-                valid = validate(mg)
+                valid = validate(mg).ok
             }
         )
     }
@@ -319,7 +474,7 @@ struct EditorView: View {
                     }
                 }
                 
-                valid = validate(mg)
+                valid = validate(mg).ok
             }
         )
     }
