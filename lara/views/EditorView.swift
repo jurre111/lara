@@ -50,7 +50,7 @@ struct EditorView: View {
     private let fm = FileManager.default
 
     init() {
-        let docs = FileManager.default.urls(for: .do@State private var showimporter: Bool = falsecumentDirectory, in: .userDomainMask)[0]
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         let sysurl = URL(fileURLWithPath: path)
         do {
