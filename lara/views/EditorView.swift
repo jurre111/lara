@@ -21,6 +21,8 @@ struct EditorView: View {
     @State private var selectedSubType: Int = -1
     @State private var backupFound: Bool?
     @State private var backupValid: Bool?
+    @State private var firstLoad: Bool = true
+    @AppStorage("firstMGLoad") private var firstMGLoad: Bool = true
 
     enum SubType: Int, CaseIterable, Identifiable {
         case iPhone14Pro = 2556
@@ -209,7 +211,16 @@ struct EditorView: View {
             } message: {
                 Text(alert ?? "uhh...")
             }
-            .onAppear(perform: load)
+            .onAppear {
+                if firstMGLoad {
+                    firstMGLoad = false
+                } else {
+                    firstLoad = false
+                }
+                load()
+                checkBackups()
+                mgr.logmsg("(mbg) ogsubtype: \(ogSubType); current subtype: \(selectedSubType)")
+            }
         }
     }
     
