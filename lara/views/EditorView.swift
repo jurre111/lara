@@ -31,10 +31,10 @@ struct EditorView: View {
 
     
     private let path = "/var/mobile/Documents/mbg.plist" // "/var/containers/Shared/SystemGroup/systemgroup.com.apple.mobilegestaltcache/Library/Caches/com.apple.MobileGestalt.plist"
-    private let ogmgurl: URL
-    let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
-    let os = ProcessInfo().operatingSystemVersion
-    let fm = FileManager.default
+    private var ogmgurl: URL
+    private let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
+    private let os = ProcessInfo().operatingSystemVersion
+    private let fm = FileManager.default
 
     enum SubType: Int, CaseIterable, Identifiable {
         case iPhone14Pro = 2556

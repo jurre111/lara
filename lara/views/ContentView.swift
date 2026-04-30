@@ -258,6 +258,7 @@ struct ContentView: View {
                                                     Label("File Manager", systemImage: "folder")
                                                 }
                                             }
+
                                             NavigationLink {
                                                 VarCleanView()
                                             } label: {
