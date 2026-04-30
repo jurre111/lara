@@ -22,6 +22,7 @@ struct EditorView: View {
     @State private var backupFound: Bool?
     @State private var backupValid: Bool?
     @State private var firstLoad: Bool = true
+    @State private var showimporter: Bool = false
     @AppStorage("firstMGLoad") private var firstMGLoad: Bool = true
 
     enum SubType: Int, CaseIterable, Identifiable {
@@ -49,7 +50,7 @@ struct EditorView: View {
     private let fm = FileManager.default
 
     init() {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let docs = FileManager.default.urls(for: .do@State private var showimporter: Bool = falsecumentDirectory, in: .userDomainMask)[0]
         ogmgurl = docs.appendingPathComponent("ogmobilegestalt.plist")
         let sysurl = URL(fileURLWithPath: path)
         do {
@@ -210,6 +211,38 @@ struct EditorView: View {
                 }
             } message: {
                 Text(alert ?? "uhh...")
+            }
+            .fileImporter(
+                isPresented: $showimporter,
+                allowedContentTypes: [.propertyList],
+                allowsMultipleSelection: false
+            ) { result in
+                if case .success(let urls) = result, let importurl = urls.first {
+                    do {
+                        let uploaded = try NSMutableDictionary(contentsOf: importurl, error: ())
+                        let validcheck = validate(uploaded, file: importurl)
+                        mgr.logmsg("(mbg) Loading uploaded backup...\n(mbg) Validating loaded backup...\n(mbg) \(validcheck.message)")
+                        if validcheck.ok {
+                            for backup in [ogmgurl, secondBackupURL] {
+                                if fm.fileExists(atPath: backup.path) {
+                                    try fm.removeItem(at: backup)
+                                }
+                                try fm.copyItem(at: importurl, to: backup)
+                            }
+                            backupFound = true
+                            backupValid = true
+                            status = "Succes! Loaded and verified imported backup!"
+                            mgr.logmsg("(mbg) Successfully loaded imported backup!")
+                        } else {
+                            backupFound = true
+                            status = "Loaded backup is invalid: \(validcheck.message). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
+                        }
+                    } catch {
+                        backupFound = true
+                        mgr.logmsg("(mbg) Loading backups from system failed: \(error)")
+                        status = "Failed to load backup from file: \(error). Retry or try a different backup by clicking \"Load from files\" in Backup Manager."
+                    }
+                }
             }
             .onAppear {
                 if firstMGLoad {
