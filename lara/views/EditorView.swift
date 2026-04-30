@@ -37,7 +37,22 @@ struct EditorView: View {
     private let fm = FileManager.default
 
     init() {
-        load()
+        // turns out init() is needed, else the picker shows up empty. We can't just run load() so we just run a simple version of load and let load() run once the view is initialized
+        do {
+            let dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path))
+            guard let cacheExtra = mg["CacheExtra"] as? NSMutableDictionary,
+                let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary,
+                let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
+                status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
+                return
+            }
+            _selectedSubType = State(initialValue: subType)
+            if ogSubType == -1 {
+                ogSubType = subType
+            }
+        } catch {
+            status = "Error: \(error)"
+        }
     }
 
     enum SubType: Int, CaseIterable, Identifiable {
