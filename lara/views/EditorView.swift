@@ -106,19 +106,15 @@ struct EditorView: View {
         NavigationStack {
             List {
                 Section {
-                    HStack {
-                        Text("Dynamic Island")
-                        
-                        Spacer()
-                        
-                        Picker("", selection: $selectedSubType) {
-                            Text("Original (\(String(ogSubType)))").tag(ogSubType)
-                            ForEach(SubType.allCases.filter { $0.rawValue != ogSubType }) { subtype in
-                                Text(subtype.displayName).tag(subtype.rawValue)
+                        HStack {
+                            Picker("Dynamic Island", selection: $selectedSubType) {
+                                Text("Original (\(String(ogSubType)))").tag(ogSubType)
+                                ForEach(SubType.allCases.filter { $0.rawValue != ogSubType }) { subtype in
+                                    Text(subtype.displayName).tag(subtype.rawValue)
+                                }
                             }
+                            .pickerStyle(.menu)
                         }
-                        .pickerStyle(.menu)
-                    }
                     Toggle("Action Button", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
                         .disabled(requiresVersion(17))
                     Toggle("Allow installing iPadOS apps", isOn: mgkeybinding(["9MZ5AdH43csAUajl/dU+IQ"], type: [Int].self, default: [1], enable: [1, 2]))
@@ -353,6 +349,7 @@ struct EditorView: View {
                 }
                 load()
                 checkBackups()
+                mgr.logmsg("(mbg) ogsubtype: \(ogSubType); current subtype: \(selectedSubType)")
             }
         }
     }
