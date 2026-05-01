@@ -35,6 +35,9 @@ struct EditorView: View {
     private let secondBackupURL = URL(fileURLWithPath: "/var/mobile/.lara/ogmobilegestalt.plist")
     private let os = ProcessInfo().operatingSystemVersion
     private let fm = FileManager.default
+    var subtypes = [2556, 2796, 2976, 2622, 2868, 2436]
+    var subtypeNames = [2556: "14 Pro (2556)", 2796: "14 Pro Max (2796)", 2976: "15 Pro Max (2976)", 2622: "16 Pro (2622)", 2868: "16 Pro Max (2868)", 2436: "X Gestures (2436)"]
+    var subtypeDisabled: [Int: Bool] = [:]
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -59,62 +62,29 @@ struct EditorView: View {
         if ogSubType == -1 {
             ogSubType = subType
         }
+        let originalSubType = ogSubType
+        subtypes.removeAll { $0 == originalSubType }
+        subtypeDisabled = [2556: requiresVersion(16), 2796: requiresVersion(16), 2976: requiresVersion(17), 2622: requiresVersion(18), 2868: requiresVersion(18), 2436: !UIDevice._hasHomeButton()]
 
-    }
-
-    // init() {
-    //     // turns out init() is needed, else the picker shows up empty. We can't just run load() so we just run a simple version of load and let load() run once the view is initialized
-    //     do {
-    //         if let dict = NSMutableDictionary(contentsOf: URL(fileURLWithPath: path)) {
-    //             guard let cacheExtra = dict["CacheExtra"] as? NSMutableDictionary,
-    //                 let oPeik = cacheExtra["oPeik/9e8lQWMszEjbPzng"] as? NSMutableDictionary,
-    //                 let subType = oPeik["ArtworkDeviceSubType"] as? Int else {
-    //                 status = "Failed to get dictionaries from MobileGestalt. Reopen the page to try again."
-    //                 return
-    //             }
-    //             _selectedSubType = State(initialValue: subType)
-    //             if ogSubType == -1 {
-    //                 ogSubType = subType
-    //             }
-    //         } else {
-    //             status = "Failed to load MobileGestalt data."
-    //         }
-    //     } catch {
-    //         status = "Error: \(error)"
-    //     }
-    // }
-
-    enum SubType: Int, CaseIterable, Identifiable {
-        case iPhone14Pro = 2556
-        case iPhone14ProMax = 2796
-        case iPhone16Pro = 2622
-        case iPhone16ProMax = 2868
-        // X gestures for SE?
-
-        var id: Int { self.rawValue }
-        var displayName: String {
-            switch self {
-            case .iPhone14Pro: return "14 Pro (2556)"
-            case .iPhone14ProMax: return "14 Pro Max (2796)"
-            case .iPhone16Pro: return "iOS 18+:\n16 Pro (2622)"
-            case .iPhone16ProMax: return "iOS 18+:\n16 Pro Max (2868)"
-            }
-        }
     }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                        HStack {
-                            Picker("Dynamic Island", selection: $selectedSubType) {
-                                Text("Original (\(String(ogSubType)))").tag(ogSubType)
-                                ForEach(SubType.allCases.filter { $0.rawValue != ogSubType }) { subtype in
-                                    Text(subtype.displayName).tag(subtype.rawValue)
-                                }
+                    HStack {
+                        Text("Dynamic Island")
+                        Spacer()
+                        Menu {
+                            Button("Original (\(String(ogSubType)))") { selectedSubType = ogSubType }
+                            ForEach(subtypes, id: \.self) { subtype in
+                                Button(subtypeNames[subtype] ?? "??") { selectedSubType = subtype }
+                                    .disabled(subtypeDisabled[subtype] ?? true)
                             }
-                            .pickerStyle(.menu)
+                        } label: {
+                            Text(selectedSubType == ogSubType ? "Original (\(String(selectedSubType)))" :  (subtypeNames[selectedSubType] ?? "Unknown (\(String(selectedSubType)))"))
                         }
+                    }
                     Toggle("Action Button", isOn: mgkeybinding(["cT44WE1EohiwRzhsZ8xEsw"]))
                         .disabled(requiresVersion(17))
                     Toggle("Allow installing iPadOS apps", isOn: mgkeybinding(["9MZ5AdH43csAUajl/dU+IQ"], type: [Int].self, default: [1], enable: [1, 2]))
