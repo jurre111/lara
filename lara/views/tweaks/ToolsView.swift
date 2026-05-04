@@ -173,7 +173,7 @@ struct ToolsView: View {
             }
             
             Section {
-                HStack {nil
+                HStack {
                     if showtoken {
                         Text(mgr.sbxready ? "tkn" : "No Saved Token.")
                             .foregroundColor(.secondary)
