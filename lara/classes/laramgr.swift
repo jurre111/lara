@@ -562,6 +562,53 @@ final class laramgr: ObservableObject {
         return appList
     }
 
+    func setplistvalue(path: String, key: (key: String, value: Any)) -> (ok: Bool, message: String) {
+        do {
+            fm = FileManager.default
+            if fm.fileExists(atPath: path) {
+                var dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path))
+                dict[key.key] = key.value
+
+                let data = try PropertyListSerialization.data(
+                    fromPropertyList: mg,
+                    format: .binary,
+                    options: 0
+                )
+                let result = self.lara_overwritefile(
+                    target: path,
+                    data: data
+                )
+                if result.ok {
+                    return (ok: true, message: "overwrote plist at path \(path)")
+                } else {
+                    return(ok: false, message: "overwrite failed: \(result.message)")
+                }
+            } else {
+                return (ok: false, message: "file at \(path) does not exist or couldn't be found")
+            }
+        } catch {
+            return (ok: false, message: "an error occured: \(error)")
+        }
+    }
+
+    func getplistvalue(path: String, key: String) -> (ok: Bool, message: String, value: Any?) {
+        do {
+            fm = FileManager.default
+            if fm.fileExists(atPath: path) {
+                var dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path))
+                if let value = dict[key] {
+                    return (true, "success", value)
+                } else {
+                    return (false, "key \(key) not found; canceling key lookup", nil)
+                }
+            } else {
+                return (false, "file at \(path) does not exist or couldn't be found", nil)
+            }
+        } catch {
+            return (false, "an error occured: \(error)", nil)
+        }
+    }
+
     @discardableResult
     func apfsown(path: String, uid: UInt32, gid: UInt32) -> Bool {
         if !isapfs(path) {

@@ -33,6 +33,7 @@ struct ToolsView: View {
     @State private var uid: uid_t = getuid()
     @State private var pid: pid_t = getpid()
     @State private var status: String?
+    @State private var respringlock: Bool?
     
     var body: some View {
         List {
@@ -158,6 +159,18 @@ struct ToolsView: View {
             } footer: {
                 Text("Get the needed hashes for Pocket Poster without the need of a PC.")
             }
+
+            Section {
+                Button((respringlock ? "Disable" : "Enable") + "locking after respring") {
+                    let result = mgr.setplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: ("SBDontLockAfterCrash", !respringlock))
+                    if result.ok {
+                        respringlock.toggle()
+                    } else {
+                        status = (respringlock ? "Disabling" : "Enabling") + "respring after lock failed: \(result.message)"
+                    }
+                }
+                .disabled(respringlock == nil)
+            }
             
             Section {
                 HStack {
@@ -243,6 +256,10 @@ struct ToolsView: View {
             if mgr.dsready {
                 getaslrstate()
                 isaslr = aslrstate
+            }
+            let plistvalue = mgr.getplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: "SBDontLockAfterCrash")
+            if plistvalue.ok, let value = plistvalue.value as? Bool {
+                respringlock = value
             }
         }
     }
