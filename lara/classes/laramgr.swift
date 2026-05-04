@@ -564,30 +564,33 @@ final class laramgr: ObservableObject {
 
     func setplistvalue(path: String, key: (key: String, value: Any)) -> (ok: Bool, message: String) {
         do {
-            fm = FileManager.default
+            let fm = FileManager.default
             if fm.fileExists(atPath: path) {
-                var dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path))
-                dict[key.key] = key.value
+                if var dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path)) {
+                    dict[key.key] = key.value
 
-                let data = try PropertyListSerialization.data(
-                    fromPropertyList: mg,
-                    format: .binary,
-                    options: 0
-                )
-                let result = self.lara_overwritefile(
-                    target: path,
-                    data: data
-                )
-                if result.ok {
-                    return (ok: true, message: "overwrote plist at path \(path)")
+                    let data = try PropertyListSerialization.data(
+                        fromPropertyList: dict,
+                        format: .binary,
+                        options: 0
+                    )
+                    let result = self.lara_overwritefile(
+                        target: path,
+                        data: data
+                    )
+                    if result.ok {
+                        return (true, "overwrote plist at path \(path)")
+                    } else {
+                        return(false, "overwrite failed: \(result.message)")
+                    }
                 } else {
-                    return(ok: false, message: "overwrite failed: \(result.message)")
+                    return(false, "could not convert plist at \(path) to readable data")
                 }
             } else {
-                return (ok: false, message: "file at \(path) does not exist or couldn't be found")
+                return (false, "file at \(path) does not exist or couldn't be found")
             }
         } catch {
-            return (ok: false, message: "an error occured: \(error)")
+            return (false, "an error occured: \(error)")
         }
     }
 
