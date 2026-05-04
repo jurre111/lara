@@ -596,13 +596,16 @@ final class laramgr: ObservableObject {
 
     func getplistvalue(path: String, key: String) -> (ok: Bool, message: String, value: Any?) {
         do {
-            fm = FileManager.default
+            let fm = FileManager.default
             if fm.fileExists(atPath: path) {
-                var dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path))
-                if let value = dict[key] {
-                    return (true, "success", value)
+                if var dict = try NSMutableDictionary(contentsOf: URL(fileURLWithPath: path)) {
+                    if let value = dict[key] {
+                        return (true, "success", value)
+                    } else {
+                        return (false, "key \(key) not found; canceling key lookup", nil)
+                    }
                 } else {
-                    return (false, "key \(key) not found; canceling key lookup", nil)
+                    return(false, "could not convert plist at \(path) to readable data", nil)
                 }
             } else {
                 return (false, "file at \(path) does not exist or couldn't be found", nil)
