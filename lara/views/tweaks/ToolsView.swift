@@ -161,12 +161,12 @@ struct ToolsView: View {
             }
 
             Section {
-                Button(((respringlock.value) ? "Disable" : "Enable") + "locking after respring") {
-                    let result = mgr.setplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: ("SBDontLockAfterCrash", !respringlock.value))
+                Button(((respringlock.value) ? "Disable" : "Enable") + " locking after respring") {
+                    let result = mgr.setplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: ("SBDontLockAfterCrash", respringlock.value))
                     if result.ok {
                         respringlock.value.toggle()
                     } else {
-                        status = (respringlock.value ? "Disabling" : "Enabling") + "respring after lock failed: \(result.message)"
+                        status = (respringlock.value ? "Disabling" : "Enabling") + " respring after lock failed: \(result.message)"
                     }
                 }
                 .disabled(respringlock.readfailed == true)
@@ -259,7 +259,7 @@ struct ToolsView: View {
             }
             let result = mgr.getplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: "SBDontLockAfterCrash")
             if result.ok, let value = result.value as? Bool {
-                respringlock = (value, false)
+                respringlock = (!value, false)
             } else {
                 respringlock.readfailed = true
             }
