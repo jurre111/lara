@@ -69,14 +69,14 @@ jobs:
 
       - name: create release tag
         run: |
-          TAG="nightly_$(date +'%Y%m%d%H%M%S')-$(git rev-parse --short HEAD)"
+          TAG="nightly"
           echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: get last 12h commits
         run: |
           COMMITS=$(git log --since="12 hours ago" --pretty=format:"- %h %s (%an)")
           if [ -z "$COMMITS" ]; then
-            COMMITS="no commits in the last 12 hours"
+            COMMITS="no commits in the last 12 hour_$(date +'%Y%m%d%H%M%S')-$(git rev-parse --short HEAD)s"
           fi
           echo "COMMITS<<EOF" >> $GITHUB_ENV
           echo "$COMMITS" >> $GITHUB_ENV
