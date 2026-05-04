@@ -33,7 +33,7 @@ struct ToolsView: View {
     @State private var uid: uid_t = getuid()
     @State private var pid: pid_t = getpid()
     @State private var status: String?
-    @State private var respringlock: Bool?
+    @State private var respringlock: (value: Bool, readfailed: Bool) = (true, false)
     
     var body: some View {
         List {
@@ -161,19 +161,19 @@ struct ToolsView: View {
             }
 
             Section {
-                Button((respringlock ? "Disable" : "Enable") + "locking after respring") {
-                    let result = mgr.setplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: ("SBDontLockAfterCrash", !respringlock))
+                Button(((respringlock.value) ? "Disable" : "Enable") + "locking after respring") {
+                    let result = mgr.setplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: ("SBDontLockAfterCrash", !respringlock.value))
                     if result.ok {
-                        respringlock.toggle()
+                        respringlock.value.toggle()
                     } else {
-                        status = (respringlock ? "Disabling" : "Enabling") + "respring after lock failed: \(result.message)"
+                        status = (respringlock.value ? "Disabling" : "Enabling") + "respring after lock failed: \(result.message)"
                     }
                 }
-                .disabled(respringlock == nil)
+                .disabled(respringlock.readfailed == true)
             }
             
             Section {
-                HStack {
+                HStack {nil
                     if showtoken {
                         Text(mgr.sbxready ? "tkn" : "No Saved Token.")
                             .foregroundColor(.secondary)
@@ -257,9 +257,11 @@ struct ToolsView: View {
                 getaslrstate()
                 isaslr = aslrstate
             }
-            let plistvalue = mgr.getplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: "SBDontLockAfterCrash")
-            if plistvalue.ok, let value = plistvalue.value as? Bool {
-                respringlock = value
+            let result = mgr.getplistvalue(path: "/var/Managed Preferences/mobile/com.apple.springboard.plist", key: "SBDontLockAfterCrash")
+            if result.ok, let value = result.value as? Bool {
+                respringlock = (value, false)
+            } else {
+                respringlock.readfailed = true
             }
         }
     }
