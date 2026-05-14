@@ -1454,7 +1454,7 @@ private enum santanderfs {
     }
 
     static func bundleappname(at path: String) -> String? {
-        func returnappname(path: String) {
+        func appname(path: String) -> String? {
             let infopath = path + "/Info.plist"
             guard let plist = NSDictionary(contentsOf: URL(fileURLWithPath: infopath)) else { return nil }
             return (plist["CFBundleDisplayName"] as? String) ??
@@ -1463,14 +1463,13 @@ private enum santanderfs {
         }
 
         if path.lastPathComponent.hasSuffix(".app") {
-            return returnappname(path: path)
+            return appname(path: path)
         } else {
             guard let contents = try? FileManager.default.contentsOfDirectory(atPath: path) else { return nil }
             for item in contents where item.hasSuffix(".app") {
-                returnappname(path: path + "/" + item)
+                return appname(path: path + "/" + item)
             }
         }
-        return nil
     }
 
     static func bundleidforcontainer(at path: String) -> String? {
