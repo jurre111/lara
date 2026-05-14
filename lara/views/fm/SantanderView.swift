@@ -1004,6 +1004,8 @@ private enum santanderfs {
 
         do {
             let names = try fm.contentsOfDirectory(atPath: item.path)
+            let moderaw = UserDefaults.standard.string(forKey: "selectedFmAppsDisplayMode") ?? ""
+            laramgr.shared.log("FMAppsDisplayMode raw value: \(moderaw)")
             let mode = fmAppsDisplayMode(rawValue: UserDefaults.standard.string(forKey: "selectedFmAppsDisplayMode") ?? "") ?? .UUID
             let containerdirs = [
                 "/private/var/mobile/Containers/Data/Application",
