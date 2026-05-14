@@ -1455,7 +1455,7 @@ private enum santanderfs {
 
     static func bundleappname(at path: String) -> String? {
         func appname(path: String) -> String? {
-            let infopath = path + "/Info.plist"
+    hasSuffix        let infopath = path + "/Info.plist"
             guard let plist = NSDictionary(contentsOf: URL(fileURLWithPath: infopath)) else { return nil }
             return (plist["CFBundleDisplayName"] as? String) ??
                 (plist["CFBundleName"] as? String) ??
@@ -1470,6 +1470,7 @@ private enum santanderfs {
                 return appname(path: path + "/" + item)
             }
         }
+        return nil
     }
 
     static func bundleidforcontainer(at path: String) -> String? {
