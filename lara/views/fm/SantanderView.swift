@@ -1005,17 +1005,28 @@ private enum santanderfs {
         do {
             let names = try fm.contentsOfDirectory(atPath: item.path)
             let mode = fmAppsDisplayMode(rawValue: UserDefaults.standard.string(forKey: "selectedFmAppsDisplayMode") ?? "") ?? .appName
-            let datadirs = [
+            let containerdirs = [
                 "/private/var/mobile/Containers/Data/Application",
-                "/var/mobile/Containers/Data/Application"
+                "/var/mobile/Containers/Data/Application",
+                "/private/var/containers/Data/System",
+                "/var/containers/Data/System",
+                "/private/var/containers/Shared/SystemGroup",
+                "/var/containers/Shared/SystemGroup",
+                "/private/var/mobile/Containers/Data/InternalDaemon",
+                "/var/mobile/Containers/Data/InternalDaemon",
+                "/private/var/mobile/Containers/Data/PluginKitPlugin",
+                "/var/mobile/Containers/Data/PluginKitPlugin",
+                "/private/var/mobile/Containers/Shared/AppGroup",
+                "/var/mobile/Containers/Shared/AppGroup"
             ]
             let bundledirs = [
                 "/private/var/containers/Bundle/Application",
-                "/var/containers/Bundle/Application"
+                "/var/containers/Bundle/Application",
+                "/Applications"
             ]
             var appnames: [String: String] = [:]
 
-            if mode == .appName && datadirs.contains(item.path) {
+            if mode == .appName && containerdirs.contains(item.path) {
                 appnames = appnamecache()
             }
 
@@ -1025,7 +1036,7 @@ private enum santanderfs {
                 fm.fileExists(atPath: full, isDirectory: &isdir)
                 var display = name
 
-                if (bundledirs + datadirs).contains(item.path) {
+                if (bundledirs + containerdirs).contains(item.path) {
                     if mode == .appName {
                         if bundledirs.contains(item.path) {
                             display = bundleappname(at: full) ?? name
@@ -1443,13 +1454,21 @@ private enum santanderfs {
     }
 
     static func bundleappname(at path: String) -> String? {
-        guard let contents = try? FileManager.default.contentsOfDirectory(atPath: path) else { return nil }
-        for item in contents where item.hasSuffix(".app") {
-            let infopath = path + "/" + item + "/Info.plist"
-            guard let plist = NSDictionary(contentsOf: URL(fileURLWithPath: infopath)) else { continue }
+        func returnappname(path: String) {
+            let infopath = path + "/Info.plist"
+            guard let plist = NSDictionary(contentsOf: URL(fileURLWithPath: infopath)) else { return nil }
             return (plist["CFBundleDisplayName"] as? String) ??
                 (plist["CFBundleName"] as? String) ??
                 (plist["CFBundleExecutable"] as? String)
+        }
+
+        if path.lastPathComponent.hasSuffix(".app") {
+            return returnappname(path: path)
+        } else {
+            guard let contents = try? FileManager.default.contentsOfDirectory(atPath: path) else { return nil }
+            for item in contents where item.hasSuffix(".app") {
+                returnappname(path: path + "/" + item)
+            }
         }
         return nil
     }

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TweaksView: View {
     @AppStorage("logsdisplaymode") private var selectedlogsdisplaymode: logsdisplaymode = .toolbar
+    @AppStorage("showFMInTabs") private var showFMInTabs: Bool = true
     @ObservedObject var mgr: laramgr
     
     var body: some View {
@@ -55,6 +56,10 @@ struct TweaksView: View {
                         .disabled(!mgr.sbxready)
                     NavigationLink("Custom Overwrite", destination: CustomView(mgr: mgr))
                         .disabled(!mgr.vfsready)
+                    if !showFMInTabs {
+                        NavigationLink("File Manager", destination: SantanderView(startPath: "/"))
+                            .disabled(!mgr.sbxready || !mgr.vfsready)
+                    }
                 }
                 
                 NavigationLink("Extra Tools", destination: ToolsView())
