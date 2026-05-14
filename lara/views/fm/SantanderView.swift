@@ -1462,7 +1462,7 @@ private enum santanderfs {
                 (plist["CFBundleExecutable"] as? String)
         }
 
-        if path.lastPathComponent.hasSuffix(".app") {
+        if URL(fileURLWithPath: path).pathExtension == "app" {
             return appname(path: path)
         } else {
             guard let contents = try? FileManager.default.contentsOfDirectory(atPath: path) else { return nil }
