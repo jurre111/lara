@@ -8,11 +8,10 @@ final class webdavmgr: ObservableObject {
     @Published var url: String?
     @Published var showhiddenfiles: Bool = true
 
-    @AppStorage("customdavpath") private var customdavpath: String?
-
     static let shared = webdavmgr()
 
     func startserver() -> (ok: Bool, message: String) {
+        let customdavpath = UserDefaults.standard.string(forKey: "customdavpath")
         guard !serverstarted else { return (false, "A WebDAV server is already running") }
         guard FileManager.default.fileExists(atPath: path) else { return  (false, "The path \(path) does not exist") }
         let server = GCDWebDAVServer(uploadDirectory: customdavpath != nil ? customdavpath! : path)

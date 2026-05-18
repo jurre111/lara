@@ -210,7 +210,7 @@ struct SettingsView: View {
                         get: {
                             customdavpath != nil
                         },
-                        set: { newpath in
+                        set: {
                             if customdavpath {
                                 customdavpath = nil
                             } else {
@@ -219,7 +219,14 @@ struct SettingsView: View {
                         }
                     ))
                     if customdavpath {
-                        TextField("Path", text: $customdavpath)
+                        TextField("Path", text: Binding(
+                            get: { customdavpath ?? "/" },
+                            set: { newpath in
+                                if FileManager.default.fileExists(atPath: newpath) {
+                                    customdavpath = newpath
+                                }
+                            }
+                        ))
                     }
                     Toggle("Show hidden files", isOn: $davmgr.showhiddenfiles)
                     Toggle("Auto-run", isOn: $autorunwebdav)
