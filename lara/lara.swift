@@ -80,6 +80,7 @@ struct lara: App {
                 }
             }
             .environmentObject(mgr)
+            .environmentObject(davmgr)
             .overlay {
                 if mgr.showrespring {
                     respringview()
