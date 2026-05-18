@@ -205,7 +205,7 @@ struct SettingsView: View {
                     Toggle("Show File Manager in Tabs", isOn: $showFMInTabs)
                 }
 
-                Section(header: HeaderLabel(text: "WebDav", icon: "globe"), footer: Text("Enabling auto-run will start the WebDAV server directly after the system is initialised. You can always manually start and stop the server here." + davmgr.url != nil ? "\nRunning on: \(davmgr.url? ?? "oops")" : "")) {
+                Section(header: HeaderLabel(text: "WebDav", icon: "globe"), footer: Text("Enabling auto-run will start the WebDAV server directly after the system is initialised. You can always manually start and stop the server here." + (davmgr.url != nil ? "\nRunning on: \(davmgr.url!)" : ""))) {
                     Toggle("Custom Path", isOn: $customdavpath)
                     if customdavpath {
                         TextField("Path", text: $davmgr.path)
