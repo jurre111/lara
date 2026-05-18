@@ -210,15 +210,15 @@ struct SettingsView: View {
                         get: {
                             customdavpath != nil
                         },
-                        set: {
-                            if customdavpath {
-                                customdavpath = nil
+                        set: { newvalue in
+                            if newvalue  {
+                                customdavpath = customdavpath ?? "/"
                             } else {
-                                customdavpath = "/"
+                                customdavpath = nil
                             }
                         }
                     ))
-                    if customdavpath {
+                    if customdavpath != nil {
                         TextField("Path", text: Binding(
                             get: { customdavpath ?? "/" },
                             set: { newpath in
