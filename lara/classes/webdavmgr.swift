@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 final class webdavmgr: ObservableObject {
     @Published var webdav: GCDWebDAVServer?
