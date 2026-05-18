@@ -29,6 +29,7 @@ enum logsdisplaymode: String, CaseIterable {
 
 struct SettingsView: View {
     @EnvironmentObject var mgr: laramgr
+    @EnvironmentObject var davmgr: webdavmgr
     
     @AppStorage("selectedMethod") private var selectedMethod: method = .hybrid
     @AppStorage("keepAlive") private var keepAlive: Bool = false
@@ -47,6 +48,9 @@ struct SettingsView: View {
     @AppStorage("fmRecursiveSearch") private var fmRecursiveSearch: Bool = false
     
     @AppStorage("rcDockUnlimited") private var rcDockUnlimited: Bool = false
+
+    @AppStorage("customdavpath") private var customdavpath: Bool = false
+    @AppStorage("autorunwebdav") private var autorunwebdav: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -199,6 +203,28 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
                     Toggle("Recursive Search in File Manager", isOn: $fmRecursiveSearch)
                     Toggle("Show File Manager in Tabs", isOn: $showFMInTabs)
+                }
+
+                Section(header: HeaderLabel(text: "WebDav", icon: "globe"), footer: Text("Enabling auto-run will start the WebDAV server directly after the system is initialised. You can always manually start and stop the server here." + davmgr.url ? "\nRunning on: \(davmgr.url)" : "")) {
+                    Toggle("Custom Path", isOn: $customdavpath)
+                    if customdavpath {
+                        TextField("Path", text: $davmgr.path)
+                    }
+                    Toggle("Show hidden files", isOn: $davmgr.showhiddenfiles)
+                    Toggle("Auto-run", isOn: $autorunwebdav)
+                    Button(davmgr.serverstarted ? "Stop WebDAV server" : "Start WebDAV server") {
+                        if !davmgr.serverstarted {
+                            result = davmgr.startserver()
+                            if !result.ok {
+                                Alertinator.shared.alert(title: "Error", body: "Starting a WebDAV server in path \(davmgr.path) failed.")
+                            }
+                        } else {
+                            result = davmgr.stopserver()
+                            if !result.ok {
+                                Alertinator.shared.alert(title: "Error", body: "Stopping the WebDAV server currently running in path \(davmgr.path) failed.")
+                            }
+                        }
+                    }
                 }
                 
                 #if !DISABLE_REMOTECALL

@@ -180,10 +180,6 @@ struct ToolsView: View {
             }
 
             Section {
-                NavigationLink("Web Server", destination: WebView())
-            }
-            
-            Section {
                 HStack {
                     if showtoken {
                         Text(mgr.sbxready ? "tkn" : "No Saved Token.")

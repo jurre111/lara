@@ -18,6 +18,7 @@ var weonadebugbuild_pjbweouttahereexclamationmark: Bool = false
 @main
 struct lara: App {
     @StateObject private var mgr = laramgr.shared
+    @StateObject private var davmgr = webdavmgr.shared
     @StateObject private var iconthememgr = IconThemeManager.shared
     @Environment(\.scenePhase) var scenephase
     @AppStorage("selectedMethod") private var selectedMethod: method = .hybrid

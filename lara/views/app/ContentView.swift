@@ -9,6 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
+    @EnvironmentObject var davmgr: webdavmgr
     @EnvironmentObject private var mgr: laramgr
     @ObservedObject private var logger = globallogger
     @AppStorage("selectedMethod") private var selectedmethod: method = .hybrid
@@ -133,6 +134,7 @@ struct ContentView: View {
                         Button("Initialize System", action: {
                             mgr.vfsinit()
                             mgr.sbxescape()
+                            davmgr.startserver()
                         })
                         .disabled(!mgr.hasOffsets || !mgr.dsready || mgr.vfsrunning || mgr.sbxrunning || (mgr.vfsready && mgr.sbxready))
                     }
