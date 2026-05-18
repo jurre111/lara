@@ -16,6 +16,8 @@
 #import "IconServices.h"
 #import "rc.h"
 #import "RemoteCall.h"
+#import "GCDWebServer.h"
+#import "GCDWebServerDataResponse.h"
 
 long findcachedataoff(const char *mgkey);
 void LaraClearIconCache(void);
