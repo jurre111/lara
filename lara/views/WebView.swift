@@ -1,5 +1,4 @@
 import Foundation
-import GCDWebServer
 
 struct WebView: View {
     @State private var serverstarted = false
