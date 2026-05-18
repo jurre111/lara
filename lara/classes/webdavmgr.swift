@@ -26,8 +26,8 @@ final class webdavmgr: ObservableObject {
     }
 
     func stopserver() -> (ok: Bool, message: String) {
-        guard serverstarted else { return (false, "No WebDAV server is currently running") }
-        webdav.stop()
+        guard serverstarted, let server = webdav else { return (false, "No WebDAV server is currently running") }
+        server.stop()
         self.webdav = nil
         self.serverstarted = false
         self.url = nil
