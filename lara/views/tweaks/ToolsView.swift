@@ -178,6 +178,10 @@ struct ToolsView: View {
             } footer: {
                 Text("Get the needed hashes for Pocket Poster without the need of a PC.")
             }
+
+            Section {
+                NavigationLink("Web Server", destination: WebView())
+            }
             
             Section {
                 HStack {
