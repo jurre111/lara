@@ -19,7 +19,7 @@ final class webdavmgr: ObservableObject {
             self.webdav = server
             self.serverstarted = true
             self.url = webdav?.serverURL?.absoluteString
-            return (true, "Started WebDAV in path \(path) on url \(self.url? ?? "oops")")
+            return (true, "Started WebDAV in path \(path) on url \(self.url ?? "oops")")
         } else {
             return (false, "failed starting WebDAV server in path \(path)")
         }
@@ -31,6 +31,6 @@ final class webdavmgr: ObservableObject {
         self.webdav = nil
         self.serverstarted = false
         self.url = nil
-        return (true, "Started WebDAV in path \(path) on url \(self.url? ?? "oops")")
+        return (true, "Started WebDAV in path \(path) on url \(self.url ?? "oops")")
     }
 }
