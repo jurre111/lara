@@ -15,6 +15,7 @@ struct ContentView: View {
     @AppStorage("selectedMethod") private var selectedmethod: method = .hybrid
     @AppStorage("logsdisplaymode") private var selectedlogsdisplaymode: logsdisplaymode = .toolbar
     @AppStorage("loggerNoBS") private var loggernobs: Bool = true
+    @AppStorage("autorunwebdav") private var autorunwebdav: Bool = false
     
     @State private var showSettings: Bool = false
     @State private var dlingkcache: Bool = false
@@ -134,7 +135,9 @@ struct ContentView: View {
                         Button("Initialize System", action: {
                             mgr.vfsinit()
                             mgr.sbxescape()
-                            davmgr.startserver()
+                            if autorunwebdav {
+                                davmgr.startserver()
+                            }
                         })
                         .disabled(!mgr.hasOffsets || !mgr.dsready || mgr.vfsrunning || mgr.sbxrunning || (mgr.vfsready && mgr.sbxready))
                     }
