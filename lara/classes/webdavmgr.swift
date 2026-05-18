@@ -5,7 +5,7 @@ final class webdavmgr: ObservableObject {
     @Published var webdav: GCDWebDAVServer?
     @Published var path: String = "/"
     @Published var serverstarted: Bool = false
-    @Published var url: URL?
+    @Published var url: String?
     @Published var showhiddenfiles: Bool = true
 
     static let shared = webdavmgr()
@@ -18,8 +18,8 @@ final class webdavmgr: ObservableObject {
         if server.start() {
             self.webdav = server
             self.serverstarted = true
-            self.url = webdav?.serverURL
-            return (true, "Started WebDAV in path \(path) on url \(self.url?.absoluteString ?? "oops")")
+            self.url = webdav?.serverURL?.absoluteString
+            return (true, "Started WebDAV in path \(path) on url \(self.url? ?? "oops")")
         } else {
             return (false, "failed starting WebDAV server in path \(path)")
         }
@@ -31,6 +31,6 @@ final class webdavmgr: ObservableObject {
         self.webdav = nil
         self.serverstarted = false
         self.url = nil
-        return (true, "Started WebDAV in path \(path) on url \(self.url?.absoluteString ?? "oops")")
+        return (true, "Started WebDAV in path \(path) on url \(self.url? ?? "oops")")
     }
 }
