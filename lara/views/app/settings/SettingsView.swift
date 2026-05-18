@@ -49,7 +49,7 @@ struct SettingsView: View {
     
     @AppStorage("rcDockUnlimited") private var rcDockUnlimited: Bool = false
 
-    @AppStorage("customdavpath") private var customdavpath: Bool = false
+    @AppStorage("customdavpath") private var customdavpath: String?
     @AppStorage("autorunwebdav") private var autorunwebdav: Bool = false
     
     var body: some View {
@@ -205,15 +205,26 @@ struct SettingsView: View {
                     Toggle("Show File Manager in Tabs", isOn: $showFMInTabs)
                 }
 
-                Section(header: HeaderLabel(text: "WebDav", icon: "globe"), footer: Text("Enabling auto-run will start the WebDAV server directly after the system is initialised. You can always manually start and stop the server here.")) {
-                    Toggle("Custom Path", isOn: $customdavpath)
+                Section(header: HeaderLabel(text: "WebDav", icon: "globe"), footer: Text("Enabling auto-run will start the WebDAV server directly after the system is initialised. You can always manually start and stop the server here. The server will stop if you leave the app.")) {
+                    Toggle("Custom Path", isOn: Binding(
+                        get: {
+                            customdavpath != nil
+                        },
+                        set: { newpath in
+                            if customdavpath {
+                                customdavpath = nil
+                            } else {
+                                customdavpath = "/"
+                            }
+                        }
+                    ))
                     if customdavpath {
-                        TextField("Path", text: $davmgr.path)
+                        TextField("Path", text: $customdavpath)
                     }
                     Toggle("Show hidden files", isOn: $davmgr.showhiddenfiles)
                     Toggle("Auto-run", isOn: $autorunwebdav)
                     HStack {
-                        Text("IP Adress:")
+                        Text("URL:")
                         Spacer()
                         Text(davmgr.url ?? "Not running")
                             .foregroundColor(.secondary)
@@ -232,6 +243,7 @@ struct SettingsView: View {
                             }
                         }
                     }
+                    .disabled(!mgr.sbxready)
                 }
                 
                 #if !DISABLE_REMOTECALL
