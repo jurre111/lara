@@ -205,13 +205,20 @@ struct SettingsView: View {
                     Toggle("Show File Manager in Tabs", isOn: $showFMInTabs)
                 }
 
-                Section(header: HeaderLabel(text: "WebDav", icon: "globe"), footer: Text("Enabling auto-run will start the WebDAV server directly after the system is initialised. You can always manually start and stop the server here." + (davmgr.url != nil ? "\nRunning on: \(davmgr.url!)" : ""))) {
+                Section(header: HeaderLabel(text: "WebDav", icon: "globe"), footer: Text("Enabling auto-run will start the WebDAV server directly after the system is initialised. You can always manually start and stop the server here.")) {
                     Toggle("Custom Path", isOn: $customdavpath)
                     if customdavpath {
                         TextField("Path", text: $davmgr.path)
                     }
                     Toggle("Show hidden files", isOn: $davmgr.showhiddenfiles)
                     Toggle("Auto-run", isOn: $autorunwebdav)
+                    HStack {
+                        Text("IP Adress:")
+                        Spacer()
+                        Text(davmgr.url ?? "Not running")
+                            .foregroundColor(.secondary)
+                            .monospaced()
+                    }
                     Button(davmgr.serverstarted ? "Stop WebDAV server" : "Start WebDAV server") {
                         if !davmgr.serverstarted {
                             let result = davmgr.startserver()
