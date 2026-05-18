@@ -10,7 +10,7 @@ struct WebView: View {
         List {
             Section {
                 TextField("Path", text: $path)
-                Button(serverstarted && url ? "Running on \(url!.absoluteString)" : "Start WebDAV Server") {
+                Button(serverstarted && url != nil ? "Running on \(url!.absoluteString)" : "Start WebDAV Server") {
                     initWebServer(path)
                 }
                 .disabled(serverstarted)
