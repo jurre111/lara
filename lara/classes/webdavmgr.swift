@@ -25,7 +25,7 @@ final class webdavmgr: ObservableObject {
         let started = try? server.start(options: options)
         
         DispatchQueue.main.async {
-            if started {
+            if started != nil {
                 self.webdav = server
                 self.serverstarted = true
                 self.url = webdav?.serverURL?.absoluteString
