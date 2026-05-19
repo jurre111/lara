@@ -25,6 +25,7 @@ final class webdavmgr: ObservableObject {
         let started = try? server.start(options: options)
         
         DispatchQueue.main.async {
+            return (started, started ? "Started WebDAV in path \(path) on url \(self.url ?? "oops")" : "failed starting WebDAV server in path \(path)")
             if started != nil {
                 self.webdav = server
                 self.serverstarted = true
@@ -35,7 +36,6 @@ final class webdavmgr: ObservableObject {
                 self.url = nil
             }
         }
-        return (self.serverstarted, self.serverstarted ? "Started WebDAV in path \(path) on url \(self.url ?? "oops")" : "failed starting WebDAV server in path \(path)")
     }
 
     func stopserver() -> (ok: Bool, message: String) {
