@@ -28,7 +28,7 @@ final class webdavmgr: ObservableObject {
             if started != nil {
                 self.webdav = server
                 self.serverstarted = true
-                self.url = webdav?.serverURL?.absoluteString
+                self.url = self.webdav?.serverURL?.absoluteString
             } else {
                 self.webdav = nil
                 self.serverstarted = false
