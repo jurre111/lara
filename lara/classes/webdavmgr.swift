@@ -9,6 +9,8 @@ final class webdavmgr: ObservableObject {
     @Published var showhiddenfiles: Bool = true
 
     static let shared = webdavmgr()
+    private var bg: UIBackgroundTaskIdentifier = .invalid
+
 
     func startserver() -> (ok: Bool, message: String) {
         let customdavpath = UserDefaults.standard.string(forKey: "customdavpath")
@@ -16,14 +18,23 @@ final class webdavmgr: ObservableObject {
         guard FileManager.default.fileExists(atPath: path) else { return  (false, "The path \(path) does not exist") }
         let server = GCDWebDAVServer(uploadDirectory: customdavpath != nil ? customdavpath! : path)
         server.allowHiddenItems = showhiddenfiles
-        if server.startWithOptions([GCDWebServerOption_AutomaticallySuspendInBackground: false], error: nil) {
-            self.webdav = server
-            self.serverstarted = true
-            self.url = webdav?.serverURL?.absoluteString
-            return (true, "Started WebDAV in path \(path) on url \(self.url ?? "oops")")
-        } else {
-            return (false, "failed starting WebDAV server in path \(path)")
+
+        var error: NSError? = nil
+        let options: [String: Any] = [GCDWebServerOption_AutomaticallySuspendInBackground: false]
+        let started = server.start(withOptions: options, error: &error)
+        
+        DispatchQueue.main.async {
+            if started {
+                self.webdav = server
+                self.serverstarted = true
+                self.url = webdav?.serverURL?.absoluteString
+            } else {
+                self.webdav = nil
+                self.serverstarted = false
+                self.url = nil
+            }
         }
+        return (self.serverstarted, self.serverstarted ? "Started WebDAV in path \(path) on url \(self.url ?? "oops")" : "failed starting WebDAV server in path \(path)")
     }
 
     func stopserver() -> (ok: Bool, message: String) {
@@ -33,5 +44,19 @@ final class webdavmgr: ObservableObject {
         self.serverstarted = false
         self.url = nil
         return (true, "Stopped WebDAV in path \(path) on url \(self.url ?? "oops")")
+    }
+
+    func startbg() {
+        guard bg == .invalid else { return }
+        bg = UIApplication.shared.beginBackgroundTask(withName: "davserver") {
+            UIApplication.shared.endBackgroundTask(self.bg)
+            self.bg = .invalid
+        }
+    }
+
+    func endbg() {
+        guard bg != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(bg)
+        bg = .invalid
     }
 }

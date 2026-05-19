@@ -122,11 +122,13 @@ struct lara: App {
         switch phase {
         case .inactive, .background:
             handlebg()
+            davmgr.startbg()
             globallogger.stopcapture()
 
         case .active:
             globallogger.capture()
             iconthememgr.startPendingFixupIfPossible()
+            davmgr.endbg()
 
         @unknown default:
             break
