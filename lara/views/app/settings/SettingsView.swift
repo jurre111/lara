@@ -207,15 +207,9 @@ struct SettingsView: View {
 
                 Section(header: HeaderLabel(text: "WebDav", icon: "globe"), footer: Text("Enabling auto-run will start the WebDAV server directly after the system is initialised. You can always manually start and stop the server here. The server will stop if you leave the app.")) {
                     Toggle("Custom Path", isOn: Binding(
-                        get: {
-                            customdavpath != nil
-                        },
+                        get: { customdavpath != nil },
                         set: { newvalue in
-                            if newvalue  {
-                                customdavpath = customdavpath ?? "/"
-                            } else {
-                                customdavpath = nil
-                            }
+                            customdavpath = newvalue ? "/" : nil
                         }
                     ))
                     if customdavpath != nil {
