@@ -16,7 +16,7 @@ final class webdavmgr: ObservableObject {
         guard FileManager.default.fileExists(atPath: path) else { return  (false, "The path \(path) does not exist") }
         let server = GCDWebDAVServer(uploadDirectory: customdavpath != nil ? customdavpath! : path)
         server.allowHiddenItems = showhiddenfiles
-        if server.start(withOptions: [GCDWebServerOption_AutomaticallySuspendInBackground: false]) {
+        if server.startWithOptions([GCDWebServerOption_AutomaticallySuspendInBackground: false], error: nil) {
             self.webdav = server
             self.serverstarted = true
             self.url = webdav?.serverURL?.absoluteString
