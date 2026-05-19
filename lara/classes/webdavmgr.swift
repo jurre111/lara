@@ -22,7 +22,7 @@ final class webdavmgr: ObservableObject {
 
         var error: NSError? = nil
         let options: [String: Any] = [GCDWebServerOption_AutomaticallySuspendInBackground: false]
-        let started = try? server.start(options: options, error: &error)
+        let started = try? server.start(options: options)
         
         DispatchQueue.main.async {
             if started {
