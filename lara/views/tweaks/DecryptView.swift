@@ -261,6 +261,7 @@ struct DecryptView: View {
             let contents: [String]?
             do {
                 contents = try FileManager.default.contentsOfDirectory(atPath: frameworksPath)
+                Alertinator.shared.alert(title: "yes", body: "worked", actionLabel: "Continue", action: {})
             } catch {
                 DispatchQueue.main.async {
                     decryptingbid = nil
