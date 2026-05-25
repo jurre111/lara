@@ -255,6 +255,22 @@ struct DecryptView: View {
         let payloadAppPath = payloadDir + "/" + appName
         let ipaPath = documentspath + "/Decrypted/" + ipaName
 
+        // test?
+        let frameworksPath = destAppPath + "/Frameworks"
+        if fm.fileExists(atPath: frameworksPath) {
+            let contents: [String]?
+            do {
+                contents = try fm.contentsOfDirectory(atPath: frameworksPath)
+            } catch {
+                DispatchQueue.main.async {
+                    decryptingbid = nil
+                    errormsg = "Failed to list frameworks: \(error.localizedDescription)"
+                    laramgr.shared.logmsg("(decrypt) failed to list frameworks: \(error.localizedDescription)")
+                }
+                return
+            }
+        }
+
         laramgr.shared.logmsg("(decrypt) decrypting \(app.bundleid)...")
 
         DispatchQueue.global(qos: .userInitiated).async {
