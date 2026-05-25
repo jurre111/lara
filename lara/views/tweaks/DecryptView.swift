@@ -259,7 +259,6 @@ struct DecryptView: View {
 
         DispatchQueue.global(qos: .userInitiated).async {
             let fm = FileManager.default
-
             try? fm.removeItem(atPath: workDir)
             try? fm.createDirectory(atPath: payloadDir, withIntermediateDirectories: true)
 
@@ -287,14 +286,18 @@ struct DecryptView: View {
 
             let frameworksPath = destAppPath + "/Frameworks"
             if fm.fileExists(atPath: frameworksPath) {
-                guard let frameworks = try? fm.contentsOfDirectory(atPath: frameworksPath) else {
+                let contents: [String]?
+                do {
+                    contents = try fm.contentsOfDirectory(atPath: frameworksPath)
+                } catch {
                     DispatchQueue.main.async {
                         decryptingbid = nil
-                        errormsg = "Failed to list frameworks"
-                        laramgr.shared.logmsg("(decrypt) failed to list frameworks")
+                        errormsg = "Failed to list frameworks: \(error.localizedDescription)"
+                        laramgr.shared.logmsg("(decrypt) failed to list frameworks: \(error.localizedDescription)")
                     }
                     return
                 }
+                guard let frameworks = contents else { return }
                 for fw in frameworks where fw.hasSuffix(".framework") {
                     let fwName = (fw as NSString).deletingPathExtension
                     let fwBinary = frameworksPath + "/" + fw + "/" + fwName
