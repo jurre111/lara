@@ -257,10 +257,10 @@ struct DecryptView: View {
 
         // test?
         let frameworksPath = destAppPath + "/Frameworks"
-        if fm.fileExists(atPath: frameworksPath) {
+        if FileManager.default.fileExists(atPath: frameworksPath) {
             let contents: [String]?
             do {
-                contents = try fm.contentsOfDirectory(atPath: frameworksPath)
+                contents = try FileManager.default.contentsOfDirectory(atPath: frameworksPath)
             } catch {
                 DispatchQueue.main.async {
                     decryptingbid = nil
