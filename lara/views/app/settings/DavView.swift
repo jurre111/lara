@@ -10,7 +10,7 @@ struct DavView: View {
             ))
                 .disabled(server.running)
                 .keyboardType(.numberPad)
-            Button(server.running? "Stop" : "Start") {
+            Button(server.running ? "Stop" : "Start") {
                 if server.running {
                     server.stop()
                 } else {
