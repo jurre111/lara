@@ -3,7 +3,7 @@ import Foundation
 import Combine
 
 class http: ObservableObject {
-    private var server: NWListener?
+    private var server: NWListener
     private let queue = DispatchQueue(label: "http.queue")
     var port: UInt16 = 8080
     @Published var running = false
@@ -23,7 +23,7 @@ class http: ObservableObject {
 
     func handleconnection(_ connection: NWConnection) {
         connection.start(queue: self.queue)
-        laramgr.shared.log("New connection: \(connection.endpoint)")
+        laramgr.shared.logmsg("New connection: \(connection.endpoint)")
         self.receive(from: connection)
     }
 
@@ -34,9 +34,9 @@ class http: ObservableObject {
         ) { content, _, isComplete, error in
 
             if let error {
-                laramgr.shared.log("Error: \(error)")
+                laramgr.shared.logmsg("Error: \(error)")
             } else if let content {
-                laramgr.shared.log("Received request!")
+                laramgr.shared.logmsg("Received request!")
                 self.respond(on: connection)
             }
 
@@ -65,7 +65,7 @@ class http: ObservableObject {
     }
 
     func start() {
-        server?.start(queue: queue)
+        server.start(queue: queue)
         DispatchQueue.main.async {
             self.running = true
         }
