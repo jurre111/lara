@@ -19,6 +19,7 @@ var weonadebugbuild_pjbweouttahereexclamationmark: Bool = false
 struct lara: App {
     @StateObject private var mgr = laramgr.shared
     @StateObject private var iconthememgr = IconThemeManager.shared
+    @StateObject private var server = http(port: 8080)
     @Environment(\.scenePhase) var scenephase
     @AppStorage("selectedMethod") private var selectedMethod: method = .hybrid
     @AppStorage("keepAlive") private var keepalive: Bool = false
@@ -79,6 +80,7 @@ struct lara: App {
                 }
             }
             .environmentObject(mgr)
+            .environmentObject(server)
             .overlay {
                 if mgr.showrespring {
                     respringview()

@@ -202,6 +202,8 @@ struct SettingsView: View {
                     Toggle("Recursive Search in File Manager", isOn: $fmRecursiveSearch)
                     Toggle("Show File Manager in Tabs", isOn: $showFMInTabs)
                 }
+
+                DavView()
                 
                 #if !DISABLE_REMOTECALL
                 Section(header: HeaderLabel(text: "RemoteCall", icon: "syringe")) {
