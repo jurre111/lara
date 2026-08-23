@@ -439,9 +439,9 @@ struct santanderdirview: View {
     }
 
     private func chmod(entry: santanderitem, recursive: Bool = true) -> Bool {
-        if recursive && entry.isDir {
+        if recursive && entry.isdir {
             let contents = santanderfs.listdir(item: entry, readsbx: readsbx)
-            for entry in contents {
+            for entry in contents.items {
                 guard chmod(entry: entry) else { return false }
             }
         }
