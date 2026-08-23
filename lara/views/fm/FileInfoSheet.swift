@@ -213,6 +213,7 @@ struct santanderchmodsheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var text = ""
+    @State private var recursive = false
 
     var body: some View {
         NavigationStack {
@@ -221,6 +222,9 @@ struct santanderchmodsheet: View {
                     TextField("e.g. 755", text: $text)
                         .keyboardType(.numberPad)
                         .font(.system(.body, design: .monospaced))
+                }
+                Section("Options") {
+                    Toggle("Recursive", isOn: $recursive)
                 }
             }
             .navigationTitle("Chmod")
@@ -234,7 +238,7 @@ struct santanderchmodsheet: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Apply") {
                         guard let mode = UInt16(text, radix: 8) else { return }
-                        apply(mode)
+                        apply(mode, recursive)
                         dismiss()
                     }
                     .disabled(UInt16(text, radix: 8) == nil)

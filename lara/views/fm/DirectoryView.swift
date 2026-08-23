@@ -360,9 +360,8 @@ struct santanderdirview: View {
             }
         }
         .sheet(item: $chmoditem) { entry in
-            santanderchmodsheet(item: entry) { mode in
-                santanderfs.clearImmutableIfPossible(atPath: entry.path)
-                let ok = entry.path.withCString { apfs_mod($0, mode) == 0 }
+            santanderchmodsheet(item: entry) { mode, recursive in
+                let ok = chmod(entry: entry, recursive: recursive)
                 msg = santandermsg(title: "Chmod", text: ok ? "Operation completed." : "Operation failed.")
             }
         }
@@ -437,6 +436,17 @@ struct santanderdirview: View {
             }
         }
         .contentShape(Rectangle())
+    }
+
+    private func chmod(entry: satanderitem, recursive: Bool = true) -> Bool {
+        if recursive && entry.isDir {
+            let contents = santanderfs.listdir(item: entry, readsbx: readsbx)
+            for entry in contents {
+                guard chmod(entry: entry) else { return false }
+            }
+        }
+        santanderfs.clearImmutableIfPossible(atPath: entry.path)
+        return entry.path.withCString { apfs_mod($0, mode) == 0 }
     }
 
     private func copy(_ entry: santanderitem) {
