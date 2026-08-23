@@ -209,7 +209,7 @@ struct santandernewfilesheet: View {
 
 struct santanderchmodsheet: View {
     let item: santanderitem
-    let apply: (UInt16) -> Void
+    let apply: (UInt16, Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var text = ""
