@@ -441,8 +441,8 @@ struct santanderdirview: View {
     private func chmod(entry: santanderitem, mode: UInt16, recursive: Bool = true) -> Bool {
         if recursive && entry.isdir {
             let contents = santanderfs.listdir(item: entry, readsbx: readsbx)
-            for entry in contents.items {
-                guard chmod(entry: entry, mode: mode) else { return false }
+            for item in contents.items {
+                guard chmod(entry: item, mode: mode) else { return false }
             }
         }
         santanderfs.clearImmutableIfPossible(atPath: entry.path)
