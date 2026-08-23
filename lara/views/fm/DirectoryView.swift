@@ -361,7 +361,7 @@ struct santanderdirview: View {
         }
         .sheet(item: $chmoditem) { entry in
             santanderchmodsheet(item: entry) { mode, recursive in
-                let ok = chmod(entry: entry, recursive: recursive)
+                let ok = chmod(entry: entry, mode: mode, recursive: recursive)
                 msg = santandermsg(title: "Chmod", text: ok ? "Operation completed." : "Operation failed.")
             }
         }
@@ -438,11 +438,11 @@ struct santanderdirview: View {
         .contentShape(Rectangle())
     }
 
-    private func chmod(entry: santanderitem, recursive: Bool = true) -> Bool {
+    private func chmod(entry: santanderitem, mode: UInt16, recursive: Bool = true) -> Bool {
         if recursive && entry.isdir {
             let contents = santanderfs.listdir(item: entry, readsbx: readsbx)
             for entry in contents.items {
-                guard chmod(entry: entry) else { return false }
+                guard chmod(entry: entry, mode: mode) else { return false }
             }
         }
         santanderfs.clearImmutableIfPossible(atPath: entry.path)
