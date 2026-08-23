@@ -438,7 +438,7 @@ struct santanderdirview: View {
         .contentShape(Rectangle())
     }
 
-    private func chmod(entry: satanderitem, recursive: Bool = true) -> Bool {
+    private func chmod(entry: santanderitem, recursive: Bool = true) -> Bool {
         if recursive && entry.isDir {
             let contents = santanderfs.listdir(item: entry, readsbx: readsbx)
             for entry in contents {
