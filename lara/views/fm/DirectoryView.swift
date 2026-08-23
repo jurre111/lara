@@ -167,6 +167,12 @@ struct santanderdirview: View {
                             }
 
                             Button {
+                                chmod(entry: entry, mode: 0o755, recursive: true)
+                            } label: {
+                                Label("Chmod 0755", systemImage: "info.circle")
+                            }
+
+                            Button {
                                 share(entry)
                             } label: {
                                 Label("Share", systemImage: "square.and.arrow.up")
@@ -438,7 +444,7 @@ struct santanderdirview: View {
         .contentShape(Rectangle())
     }
 
-    private func chmod(entry: santanderitem, mode: UInt16, recursive: Bool = true) -> Bool {
+    private func chmod(entry: santanderitem, mode: UInt16, recursive: Bool = true) async -> Bool {
         if recursive && entry.isdir {
             let contents = santanderfs.listdir(item: entry, readsbx: readsbx)
             for item in contents.items {
