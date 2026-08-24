@@ -445,14 +445,16 @@ struct santanderdirview: View {
     }
 
     private func chmod(entry: santanderitem, mode: UInt16, recursive: Bool = true) -> Bool {
+        santanderfs.clearImmutableIfPossible(atPath: entry.path)
+        let ok = entry.path.withCString { apfs_mod($0, mode) == 0 }
+        laramgr.shared.logmsg("Chmod \(etry.path) \(ok? "Ok": "Failed")")
         if recursive && entry.isdir {
             let contents = santanderfs.listdir(item: entry, readsbx: readsbx)
             for item in contents.items {
                 guard chmod(entry: item, mode: mode) else { return false }
             }
         }
-        santanderfs.clearImmutableIfPossible(atPath: entry.path)
-        return entry.path.withCString { apfs_mod($0, mode) == 0 }
+        return ok
     }
 
     private func copy(_ entry: santanderitem) {
